@@ -15,7 +15,7 @@ description: >
 license: MIT
 compatibility: "Beta. Requires API v66.0+, Node.js 22+, sandbox or scratch org with default language en_US, and @salesforce/plugin-ui-bundle-dev."
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: "Jag Valaiyapathy"
   maintainer: "Dylan Andersen"
   scoring: "100 points across 6 categories"
@@ -73,6 +73,7 @@ Before authoring or fixing anything, infer or ask:
 5. **Data access pattern**: GraphQL (preferred), UI API REST, or Apex REST?
 6. **Styling system**: SLDS blueprints, `design-system-react`, or Tailwind/shadcn?
 7. **Default language is `en_US`?** If not, scratch org def must set it.
+8. **Shared storage/backends?** If multiple UI bundles reuse the same Apex or custom object, define an explicit app discriminator up front (for example `Source_App__c`) and enforce it on every read/write path.
 
 ---
 
@@ -182,6 +183,10 @@ If you need those, build an LWC instead.
 - Default language must be `en_US`.
 - DE orgs and Trailhead Playgrounds are **not supported**.
 - Once Multi-Framework is enabled in an org, it **cannot be disabled**.
+
+### 9) Scope persisted state per UI bundle
+
+If multiple UI bundles share Apex services or a backing object, stamp each saved record with a stable app identifier and filter every history/state operation by that identifier. Do this in Apex (`list`, `get`, `save`, `delete`, `pin`), not just in React after fetch.
 
 ---
 
@@ -354,6 +359,7 @@ You can mix at the **app shell** vs **recipe/page** boundary, but **don't mix in
 | Field value is always `null` in production | FLS / object permissions missing in the user's permission set | [references/permissions-csp.md](references/permissions-csp.md) |
 | `axe` tests throw `getContext is not a function` | `vitest.setup.ts` missing the jsdom `HTMLCanvasElement` stub | [references/testing.md](references/testing.md) |
 | Scratch org deploy fails with feature-not-enabled | scratch def missing `UIBundleSettings.webAppOptIn: true` | [references/ci-deploy.md](references/ci-deploy.md) |
+| Chat history or saved state from another UI bundle appears | shared Apex/object persistence is missing a per-app discriminator such as `Source_App__c` | [references/troubleshooting.md](references/troubleshooting.md) |
 
 ---
 

@@ -2,12 +2,17 @@
 
 ## sf-multiframework Skill
 
-Part of the **SF Skills** family authored by [Jag Valaiyapathy](https://github.com/Jaganpro). This skill follows the same format, rubric, and cross-skill orchestration conventions used across the `sf-*` skills — treat the Jag repo as the framework.
+Written and maintained by **Dylan Andersen**.
 
-## Authors & Contributors
+The format, rubric structure, and cross-skill orchestration conventions used in this skill were inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro) — the same patterns that shape `sf-ai-agentforce`, `sf-ai-agentscript`, `sf-lwc`, `sf-apex`, and the broader SF Skills family.
 
-- **Jag Valaiyapathy** — skill framework, format, rubric, cross-skill conventions
-- **Dylan Andersen** — `sf-multiframework` skill body, reference expansion, recipe-pattern distillation
+## Author
+
+- **Dylan Andersen** — skill design, reference expansion, recipe-pattern distillation, and ongoing maintenance
+
+## Inspiration
+
+- **Jag Valaiyapathy** — skill format, scoring rubric, and cross-skill orchestration conventions that this skill follows
 
 ## References & Inspiration
 
@@ -28,7 +33,7 @@ Part of the **SF Skills** family authored by [Jag Valaiyapathy](https://github.c
 
 - [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) — canonical React-on-Salesforce recipes; `AGENT.md` in that repo was a primary input for recipe conventions, data-access patterns, and styling guidance.
 
-### Related SF Skills (Jag's framework)
+### Related SF Skills (Jag's framework, inspiration for this skill's conventions)
 
 - [`sf-ai-agentforce`](../sf-ai-agentforce/SKILL.md) — Builder metadata agents (ACC target)
 - [`sf-ai-agentscript`](../sf-ai-agentscript/SKILL.md) — `.agent` authoring bundles

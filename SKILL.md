@@ -16,18 +16,17 @@ license: MIT
 compatibility: "Beta. Requires API v66.0+, Node.js 22+, sandbox or scratch org with default language en_US, and @salesforce/plugin-ui-bundle-dev."
 metadata:
   version: "1.0.1"
-  author: "Jag Valaiyapathy"
-  maintainer: "Dylan Andersen"
+  author: "Dylan Andersen"
   scoring: "100 points across 6 categories"
   sources: "Salesforce Developer Documentation + trailheadapps/multiframework-recipes"
-  framework: "Jag Valaiyapathy SF Skills (same format / rubric / orchestration as sf-ai-agentforce, sf-ai-agentscript, sf-lwc, sf-apex)"
+  inspiration: "Jag Valaiyapathy SF Skills (format / rubric / orchestration conventions)"
 ---
 
 # sf-multiframework
 
 Salesforce **Multi-Framework (Beta)** lets you build modern frontend apps — currently **React** — that run on the Agentforce 360 Platform via the `UIBundle` metadata type. This skill is the code-first authoring path: scaffolding a project, wiring Data SDK + GraphQL, integrating the Agentforce Conversation Client, styling, and deploying.
 
-> **Sources & framework.** Built from the official [Salesforce developer documentation](references/official-sources.md) (the `reactdev-*` pages under `developer.salesforce.com/docs/platform/einstein-for-devs` and `code-builder`) and code patterns distilled from [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Follows the format and conventions of **Jag Valaiyapathy's SF Skills framework** — same rubric structure, same cross-skill orchestration pattern, same activation-checklist-first approach as `sf-ai-agentforce`, `sf-ai-agentscript`, `sf-lwc`, and `sf-apex`.
+> **Sources.** Built from the official [Salesforce developer documentation](references/official-sources.md) (the `reactdev-*` pages under `developer.salesforce.com/docs/platform/einstein-for-devs` and `code-builder`) and code patterns distilled from [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Format, rubric structure, and cross-skill orchestration conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Written and maintained by Dylan Andersen.
 
 > **Usable in any MCP-capable agent or IDE.** Agentforce Vibes is *one* authoring surface; this skill is designed for developers who work directly against the `sf` CLI and the Data SDK without requiring a specific assistant.
 

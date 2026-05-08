@@ -4,7 +4,7 @@
 
 Build React apps that run on the Agentforce 360 Platform via the `UIBundle` metadata type.
 
-> Part of **Jag Valaiyapathy's SF Skills** framework — same format, rubric, and cross-skill orchestration conventions as [`sf-ai-agentforce`](../sf-ai-agentforce/), [`sf-ai-agentscript`](../sf-ai-agentscript/), [`sf-lwc`](../sf-lwc/), [`sf-apex`](../sf-apex/). Built from official [Salesforce Developer documentation](references/official-sources.md) and [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Works in any MCP-capable agent or IDE — Agentforce Vibes is optional, not required.
+> Built from official [Salesforce Developer documentation](references/official-sources.md) and [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Format, rubric structure, and cross-skill orchestration conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Works in any MCP-capable agent or IDE — Agentforce Vibes is optional, not required.
 
 > Beta status: sandbox + scratch orgs only, default language must be `en_US`. Once enabled in an org, the feature **cannot be disabled**.
 

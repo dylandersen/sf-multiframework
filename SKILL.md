@@ -6,16 +6,17 @@ description: >
   TRIGGER when user creates or edits UI bundles (`uiBundles/`), authors React
   apps deployed via `UIBundle` metadata, configures `ui-bundle.json` /
   `.uibundle-meta.xml`, uses `@salesforce/sdk-data` (Data SDK + GraphQL), wires
-  up the Agentforce Conversation Client (ACC) in React, scaffolds with
-  `sf template generate ui-bundle`, or asks about React vs LWC choice on
-  Salesforce.
+  up the Agentforce Conversation Client (ACC) in React, builds custom AI/chat
+  surfaces backed by Apex REST + Models API, designs three-panel workspace
+  shells, scaffolds with `sf template generate ui-bundle`, or asks about
+  React vs LWC choice on Salesforce.
   DO NOT TRIGGER when the work is pure LWC (use sf-lwc), generic Apex
   (use sf-apex), Builder-managed Agentforce metadata only
   (use sf-ai-agentforce), or `.agent` script files (use sf-ai-agentscript).
 license: MIT
 compatibility: "Beta. Requires API v66.0+, Node.js 22+, sandbox or scratch org with default language en_US, and @salesforce/plugin-ui-bundle-dev."
 metadata:
-  version: "1.0.1"
+  version: "1.1.0"
   author: "Dylan Andersen"
   scoring: "100 points across 6 categories"
   sources: "Salesforce Developer Documentation + trailheadapps/multiframework-recipes"
@@ -187,6 +188,14 @@ If you need those, build an LWC instead.
 
 If multiple UI bundles share Apex services or a backing object, stamp each saved record with a stable app identifier and filter every history/state operation by that identifier. Do this in Apex (`list`, `get`, `save`, `delete`, `pin`), not just in React after fetch.
 
+### 10) Sanitize server-returned HTML before rendering
+
+Any HTML returned from an Apex endpoint — especially anything an LLM produced — must pass through a DOM-purify allowlist before reaching `dangerouslySetInnerHTML`. A tight tag/attr allowlist + a memoized `<SafeHtml>` component is the only correct pattern. See [references/llm-ui-patterns.md](references/llm-ui-patterns.md) sections 4–5.
+
+### 11) Wrap `localStorage` access in try/catch
+
+UI bundles can be hosted in sandboxed iframes where `window.localStorage` throws on read or write. Never call it directly; use the `usePersistedState` lazy-initializer pattern in [references/layout-patterns.md](references/layout-patterns.md) section 2.
+
 ---
 
 ## Recommended Authoring Workflow
@@ -311,6 +320,42 @@ You can mix at the **app shell** vs **recipe/page** boundary, but **don't mix in
 
 ---
 
+## LLM-Driven UI — Roll Your Own AI Surface
+
+When you want React to own the chat chrome and Apex to own the brain (custom intent classification, deterministic record lookup, branded conversation UI), use these patterns instead of ACC. Full reference: [references/llm-ui-patterns.md](references/llm-ui-patterns.md).
+
+| Pattern | Why |
+|---|---|
+| Single `@RestResource` with an `action` dispatcher in the body | One CSP rule, one URL mapping, action-by-action evolution |
+| Opaque `executionDataJson` round-trip through React | React doesn't need to know the server's intermediate schema |
+| Conversation history + `[WORKSPACE_STATE: {…}]` block | Lets the LLM resolve "yes" / "draft an email" without re-asking |
+| `<SafeHtml>` with `memo` + `useMemo` + DOMPurify allowlist | Long chat threads sanitize once per turn, not per keystroke |
+| Lightning record links via relative `/lightning/r/<obj>/<id>/view` | Routes inside the frame in both Lightning Experience and Experience Cloud |
+| `<SUGGESTIONS>` / `<CHART>` fenced blocks the server strips before send | Single LLM call returns HTML + structured data |
+| "Fast path" — skip the Pass-2 LLM when the answer is just records | ~1.5–3 s saved per "list me X" turn, zero hallucination surface |
+| Honest failure copy (AI down / not found / render failed / SOQL invalid) | "Too broad" generic copy blames the user; this distinguishes root cause |
+
+If you only need a pre-built chat widget that talks to an Employee Agent, use **Agentforce Conversation Client** instead — see [references/acc-integration.md](references/acc-integration.md). ACC owns the rendering, history, and styling for you.
+
+---
+
+## Layout & Shell Patterns
+
+Workspace-style apps (left nav · main · right inspector) share a small set of patterns that catch first-time authors out. Full reference: [references/layout-patterns.md](references/layout-patterns.md).
+
+| Pattern | One-line takeaway |
+|---|---|
+| Three-panel CSS Grid with `minmax(0, 1fr)` and class-toggled CSS vars | Lets a wide table shrink rather than blowing the grid past the viewport |
+| `usePersistedState` (lazy initializer + try/catch) | Survives sandboxed-iframe `localStorage` SecurityError |
+| `table-layout: fixed` + state debounced on `pointerup` | Column resize stops re-flowing the entire shell |
+| `--top-offset` CSS variable for Lightning chrome | Don't lose the bottom of your shell to the blue header bar |
+| Inspector stack in component state, not in the URL | "Back" returns the previous inspector context, not the previous page |
+| Layout-matching skeletons (same grid, same column count) | Beats spinner + rotating "Loading…" copy that feels fake |
+| Cmd-K command palette mounted at the shell | One uniform keyboard surface for navigation + actions |
+| Theme tokens in CSS variables (Tailwind config references them) | Runtime theme switching without a redeploy |
+
+---
+
 ## ACC Integration — Quick Path
 
 1. Confirm prerequisites in [references/acc-integration.md](references/acc-integration.md) (Employee Agent, cookies, Trusted Domains, Agentforce preference).
@@ -359,6 +404,17 @@ You can mix at the **app shell** vs **recipe/page** boundary, but **don't mix in
 | `axe` tests throw `getContext is not a function` | `vitest.setup.ts` missing the jsdom `HTMLCanvasElement` stub | [references/testing.md](references/testing.md) |
 | Scratch org deploy fails with feature-not-enabled | scratch def missing `UIBundleSettings.webAppOptIn: true` | [references/ci-deploy.md](references/ci-deploy.md) |
 | Chat history or saved state from another UI bundle appears | shared Apex/object persistence is missing a per-app discriminator such as `Source_App__c` | [references/troubleshooting.md](references/troubleshooting.md) |
+| LLM-generated HTML renders as escaped text in the chat bubble | wrapping with `<SafeHtml>` missing; raw `{html}` interpolated instead of `dangerouslySetInnerHTML` | [references/llm-ui-patterns.md](references/llm-ui-patterns.md) |
+| Long chat thread re-runs DOMPurify on every keystroke in the composer | `<SafeHtml>` not wrapped in `React.memo` / `useMemo` | [references/llm-ui-patterns.md](references/llm-ui-patterns.md) |
+| Record links inside chat HTML cause a hard navigation that leaves the app frame | absolute `https://…force.com/…` URL used instead of relative `/lightning/r/<obj>/<id>/view` | [references/llm-ui-patterns.md](references/llm-ui-patterns.md) |
+| Chat responds to "yes" or "draft that email" with "I'm not sure what you mean" | missing `[WORKSPACE_STATE: {…}]` block and prior turns in the request body | [references/llm-ui-patterns.md](references/llm-ui-patterns.md) |
+| Every "list me X" question takes 8–12 s even though the answer is just records | Pass-2 LLM call running unnecessarily; missing the `directResponse` fast path | [references/llm-ui-patterns.md](references/llm-ui-patterns.md) |
+| Generic "query may have been too broad" chat bubble even when AI service was down | failure-copy branching collapsed to one bucket on the Apex side | [references/llm-ui-patterns.md](references/llm-ui-patterns.md) |
+| Inspector / nav collapse state resets on every page reload | `localStorage` read/write not wrapped in try/catch (threw SecurityError in iframe) | [references/layout-patterns.md](references/layout-patterns.md) |
+| Dragging a column divider re-flows the entire shell and flickers the inspector | `<table>` missing `table-layout: fixed`, or width state updated on every `pointermove` frame | [references/layout-patterns.md](references/layout-patterns.md) |
+| Wide table pushes the app shell wider than the viewport with horizontal scroll | grid column declared as `1fr` instead of `minmax(0, 1fr)` | [references/layout-patterns.md](references/layout-patterns.md) |
+| Bottom of the app shell is clipped by the Lightning header | `height: 100vh` not subtracting `var(--top-offset)` | [references/layout-patterns.md](references/layout-patterns.md) |
+| Inspector "back" button navigates the page instead of popping the panel stack | inspector state driven from `react-router` instead of a local stack | [references/layout-patterns.md](references/layout-patterns.md) |
 
 ---
 
@@ -381,7 +437,9 @@ You can mix at the **app shell** vs **recipe/page** boundary, but **don't mix in
 
 ### UI / experience
 - [references/styling.md](references/styling.md)
+- [references/layout-patterns.md](references/layout-patterns.md)
 - [references/acc-integration.md](references/acc-integration.md)
+- [references/llm-ui-patterns.md](references/llm-ui-patterns.md)
 - [references/recipe-conventions.md](references/recipe-conventions.md)
 - [references/react-router.md](references/react-router.md)
 

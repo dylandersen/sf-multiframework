@@ -6,15 +6,17 @@ Build React apps that run on the Agentforce 360 Platform via the `UIBundle` meta
 
 > Format and cross-skill conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Built from official [Salesforce docs](references/official-sources.md) + [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Soft GA deployment corrections by [Evan Jochims](https://github.com/ejochims), Distinguished, Strategic Solution Engineer at Salesforce. Works in any MCP-capable agent or IDE.
 
-## Status (Summer '26 / API v67.0+)
+## Status — Soft GA (June 3, 2026)
 
-Sandbox + scratch orgs only · default language `en_US` · **cannot be disabled once enabled**.
+Salesforce Multi-Framework (React) reached **Accelerated ("Soft") GA on June 3, 2026**. It now runs across **all org editions — Developer Edition, Sandbox, and Production** (scratch orgs remain supported for development). API v67.0+ · default language `en_US` · **cannot be disabled once enabled**.
+
+Now generally available: React app deployment with full platform integration (auth, security, governance) via app templates, feature skills, CMS content, and the new Salesforce App Domain (incl. ACC integration); Salesforce DX workflows for managing React apps alongside other metadata; Agentforce Vibes 1.0 "vibe coding"; App Access Control (B2E) so non-admins can't reach B2E apps by direct URL or App Launcher without entitlement; and a refreshed admin app-management UX in Setup. Full GA (incl. Agentforce Vibes 2.0) is targeted next.
 
 ## Requirements
 
 | Requirement | Value |
 |---|---|
-| Org type | Sandbox or Scratch |
+| Org type | Any edition — DE, Sandbox, Production (Scratch for dev) |
 | Default language | `en_US` |
 | API version | v67.0+ |
 | Node.js | v22+ |

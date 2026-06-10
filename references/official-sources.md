@@ -1,8 +1,10 @@
 # Official Sources
 
-The authoritative documentation and reference implementations this skill is distilled from. Cite these when you need to back up a claim or check the current state of the Beta.
+The authoritative documentation and reference implementations this skill is distilled from. Cite these when you need to back up a claim or check the current state of the feature.
 
-## Salesforce Developer Documentation (Beta)
+## Salesforce Developer Documentation
+
+> Note: Multi-Framework reached Soft GA on June 3, 2026. Some linked pages below may still be titled "(Beta)" until the docs are refreshed — the link text mirrors the current page titles.
 
 ### Overview & Setup
 - [Build a React App with Salesforce Multi-Framework (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-overview.html)
@@ -67,9 +69,9 @@ The authoritative documentation and reference implementations this skill is dist
 
 This skill condenses the docs and adds opinionated patterns from the recipe repo. Defer to the linked official sources when:
 
-- A new Beta release changes the API surface (versions of `@salesforce/sdk-data`, ACC, the Vite plugin)
+- A new release changes the API surface (versions of `@salesforce/sdk-data`, ACC, the Vite plugin)
 - You hit a specific error message you can't find in [troubleshooting.md](troubleshooting.md)
 - The exact SDK option shape (e.g. `createAccWidget` parameters) matters for the bug you're fixing
-- You need to verify a Beta limitation hasn't changed (sandbox-only, English-only, can't disable, etc.)
+- You need to verify a limitation hasn't changed (English-only, can't disable, etc.)
 
 The skill's posture is: **patterns and decision frameworks** are stable enough to encode here; **exact API shapes** of evolving SDKs should be verified against the installed package.

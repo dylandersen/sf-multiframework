@@ -14,7 +14,7 @@ description: >
   generic Apex (use generating-apex), or Agentforce agent metadata and
   `.agent` script files (use developing-agentforce).
 license: MIT
-compatibility: "Summer '26 / API v67.0+. Requires Node.js 22+, sandbox or scratch org with default language en_US, and @salesforce/plugin-ui-bundle-dev."
+compatibility: "Soft GA (June 3, 2026) / API v67.0+. Available in all org editions (DE, Sandbox, Production; scratch for dev). Requires Node.js 22+, default language en_US, and @salesforce/plugin-ui-bundle-dev."
 metadata:
   version: "1.2.0"
   author: "Dylan Andersen"
@@ -31,7 +31,7 @@ Salesforce **Multi-Framework** lets you build modern frontend apps — currently
 
 > **Usable in any MCP-capable agent or IDE.** Agentforce Vibes is *one* authoring surface; this skill is designed for developers who work directly against the `sf` CLI and the Data SDK without requiring a specific assistant.
 
-> Status: **Summer '26 / API v67.0+ mechanics**. Sandbox + scratch orgs only. English (`en_US`) default language required. Not yet available in Developer Edition orgs or Trailhead Playgrounds.
+> Status: **Soft GA (Accelerated GA) as of June 3, 2026** · API v67.0+. Now available across **all org editions — Developer Edition, Sandbox, and Production** (scratch orgs supported for development). English (`en_US`) default language required. Full GA (incl. Agentforce Vibes 2.0) is upcoming.
 
 > Start here: [references/activation-checklist.md](references/activation-checklist.md)
 > New to the feature? Read [references/overview.md](references/overview.md) then [references/setup.md](references/setup.md).
@@ -66,7 +66,7 @@ Delegate elsewhere when:
 
 Before authoring or fixing anything, infer or ask:
 
-1. **Org type**: Sandbox or Scratch? (DE / Playgrounds are not supported in the current release.)
+1. **Org type**: DE, Sandbox, Production, or Scratch? (All editions are supported as of Soft GA; scratch orgs are typical for development.)
 2. **App target**: `CustomApplication` (internal employee app) or `Experience` (external B2B/B2C portal)?
 3. **Template**: `reactbasic`, `default`, or no template (manual setup)? Only use legacy names like `reactinternalapp` if `sf template generate ui-bundle --help` lists them.
 4. **ACC needed?** If yes, is the agent an Employee Agent? Are cookies + Trusted Domains configured?
@@ -184,10 +184,11 @@ If you need those, build an LWC instead.
 
 ### 8) Current limitations
 
-- Sandbox and scratch orgs only.
 - Default language must be `en_US`.
-- DE orgs and Trailhead Playgrounds are **not supported**.
 - Once Multi-Framework is enabled in an org, it **cannot be disabled**.
+- Agentforce Vibes 1.0 is supported; Vibes 2.0 arrives at Full GA.
+
+As of Soft GA (June 3, 2026), Multi-Framework runs in **all org editions — Developer Edition, Sandbox, and Production** (scratch orgs for development). The earlier sandbox/scratch-only restriction no longer applies.
 
 ### 9) Scope persisted state per UI bundle
 
@@ -407,7 +408,7 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 | Deploy includes `vite.config.js`, `.d.ts`, or `*.tsbuildinfo` | `tsc -b` emitted TypeScript artifacts into the bundle root | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
 | `npm install` fails with Vite peer conflict | Salesforce Vite plugin lags the latest Vite major | [references/project-structure.md](references/project-structure.md), [references/troubleshooting.md](references/troubleshooting.md) |
 | `sf template generate ui-bundle` is not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | [references/cli-guide.md](references/cli-guide.md) |
-| Feature toggle missing in Setup | org is DE / Playground (not supported), or default language ≠ `en_US` | [references/setup.md](references/setup.md) |
+| Feature toggle missing in Setup | default language ≠ `en_US`, or org not yet on the Soft GA rollout (feature is available in DE, Sandbox, and Production) | [references/setup.md](references/setup.md) |
 | Navigation works locally, breaks in Lightning Experience | `basename` not derived from `SFDC_ENV.basePath` | [references/react-router.md](references/react-router.md) |
 | Build error: "no exported member BrowserRouter" | importing from `react-router-dom` instead of `react-router` (v7) | [references/react-router.md](references/react-router.md) |
 | Image / font / analytics blocked with CSP console error | missing `CspTrustedSite` metadata | [references/permissions-csp.md](references/permissions-csp.md) |

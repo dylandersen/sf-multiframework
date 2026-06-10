@@ -19,7 +19,7 @@ or the Salesforce mobile app as a reusable component?
 
 ## Side-by-side
 
-| Concern | LWC | React (Multi-Framework Beta) |
+| Concern | LWC | React (Multi-Framework) |
 |---|---|---|
 | **Integration with the platform** | Deep & native — automatic data binding, Lightning Data Service, Apex, page editor placement | Hosted on the platform, but app-shaped — UI Bundle is one atomic unit |
 | **Performance inside Salesforce UI** | Optimized for the platform; usually best inside Lightning Experience | High performance for complex UIs; depends on API design and data fetching |
@@ -34,7 +34,7 @@ or the Salesforce mobile app as a reusable component?
 | **Embedding inside another framework** | Native | Hosted alone (cross-framework via Micro-Frontends Developer Preview) |
 | **Languages** | Standard JS/TS, HTML templates | TypeScript / JSX |
 | **Dark mode / theming** | Built-in via SLDS 2 tokens | DIY via Tailwind tokens or SLDS 2 |
-| **Org enablement** | GA, no toggle | Feature toggle in sandbox/scratch only; **cannot be disabled** once enabled |
+| **Org enablement** | GA, no toggle | Soft GA — feature toggle in all editions (DE, Sandbox, Production); **cannot be disabled** once enabled |
 
 ## Pick LWC when…
 
@@ -52,7 +52,7 @@ or the Salesforce mobile app as a reusable component?
 - You want a specific React library (data grid, charts, code editor, video player, etc.).
 - Your team already has deep React expertise and you want to minimize ramp-up.
 - The unit of work is an **app**, not a component.
-- You can accept Beta limitations (sandbox/scratch only, English orgs, can't disable).
+- You can accept current limitations (English-only orgs, can't disable once enabled).
 
 ## Specific scenarios
 
@@ -80,8 +80,8 @@ Not in the supported way. The opposite direction (LWCI inside React) is the supp
 ### "Will React replace LWC?"
 No. Salesforce positions LWC as the primary framework for platform-integrated components and React (and future frameworks) for **self-contained SPAs and custom experiences**.
 
-### "Is the Beta production-ready?"
-Beta. Sandbox/scratch only, English-only, can't be disabled. Plan production rollout against GA timelines.
+### "Is it production-ready?"
+Soft (Accelerated) GA since June 3, 2026 — supported in Production as well as DE and Sandbox. Still English-only and can't be disabled once enabled. Full GA (incl. Agentforce Vibes 2.0) is upcoming.
 
 ## Migration thinking
 
@@ -92,5 +92,5 @@ If you're thinking about migrating because LWC is "limiting", first check whethe
 ## See also
 
 - [overview.md](overview.md) — what Multi-Framework is and isn't
-- [setup.md](setup.md) — Beta org configuration
+- [setup.md](setup.md) — org configuration
 - Official: [React vs LWC (Beta)](https://developer.salesforce.com/docs/platform/code-builder/guide/reactdev-lwc-diff.html)

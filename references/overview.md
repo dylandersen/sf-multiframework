@@ -58,11 +58,15 @@ The `<target>` element in `.uibundle-meta.xml` accepts:
 | `@salesforce/ui-bundle` helpers | |
 | `@salesforce/vite-plugin-ui-bundle` (dev only) | |
 
+## Availability
+
+**Soft (Accelerated) GA since June 3, 2026.** Multi-Framework runs in **all org editions — Developer Edition, Sandbox, and Production**, with scratch orgs supported for development. Full GA (including Agentforce Vibes 2.0) is upcoming.
+
 ## Current limitations
 
-- **Sandbox and scratch orgs only** — no DE orgs, no Trailhead Playgrounds.
 - **Default language must be `en_US`** — known issue with non-English orgs.
 - **Once enabled, cannot be disabled** in an org.
+- **Agentforce Vibes 2.0** support arrives at Full GA (Vibes 1.0 works today).
 - **One UI bundle per metadata push** is the safe pattern; multi-app deploys can collide.
 - **No Experience Builder editing** for sites attached to React apps.
 - **Currently React only** — additional frameworks planned over time.

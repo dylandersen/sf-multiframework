@@ -107,5 +107,5 @@ Any assistant that can read this skill's references will produce the right shape
 ## What *not* to do
 
 - ❌ Don't mix generated files across assistants without review — each has quirks (import ordering, JSX syntax, test patterns). Apply [recipe-conventions.md](recipe-conventions.md) as the arbiter.
-- ❌ Don't rely on any assistant's memory of Multi-Framework — the feature is Beta and changes frequently. Point the assistant at this skill + the official docs ([official-sources.md](official-sources.md)).
+- ❌ Don't rely on any assistant's memory of Multi-Framework — the feature is new (Soft GA) and still evolving. Point the assistant at this skill + the official docs ([official-sources.md](official-sources.md)).
 - ❌ Don't install Vibes on a project where the team uses a different assistant unless there's a reason — the surfaces can generate conflicting patterns (e.g. external `.graphql` vs inline `gql`).

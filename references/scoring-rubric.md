@@ -109,7 +109,6 @@ Total                   : __ / 100
 ## What disqualifies an app regardless of score
 
 - Raw `fetch` / `axios` to Salesforce endpoints
-- Multi-Framework enabled in a non-sandbox/scratch org with production data
 - ACC integration without My Domain cookie policy + Trusted Domains both configured
 - External app deployed without companion `digitalExperiences` / `networks` / `sites`
 - Internal app deployed without companion `applications/<AppName>.app-meta.xml` or `SetupEntityAccess`

@@ -1,6 +1,6 @@
 # Configure Your Org for React Development
 
-> Current availability: **all org editions — Developer Edition, Sandbox, and Production** (Soft GA, June 3 2026); scratch orgs supported for development. Default language must be `en_US`.
+> Current availability: **all org editions — Developer Edition, Sandbox, and Production** (generally available June 3, 2026); scratch orgs supported for development. Default language must be `en_US`.
 
 ## 1. Pre-flight
 
@@ -114,7 +114,7 @@ Expected: org opens, App Launcher contains your app (after deploy), or Digital E
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Feature toggle missing in Setup | Org default language ≠ `en_US`, or org not yet provisioned with the Soft GA release | Confirm language is `en_US`; the feature is available in DE, Sandbox, and Production |
+| Feature toggle missing in Setup | Org default language ≠ `en_US`, or the release hasn't reached the org yet | Confirm language is `en_US`; the feature is available in DE, Sandbox, and Production |
 | Feature toggle visible but not clickable | User lacks **Customize Application** | Assign the System Admin profile or equivalent |
 | `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
 | Vite dev server starts but data calls 401 | Org not authorized in current shell | `sf org login web -a <alias>` |

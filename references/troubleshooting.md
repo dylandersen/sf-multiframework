@@ -1,13 +1,13 @@
 # Troubleshooting
 
-Bucketed by where the failure happens. Each row is a real failure mode seen in Multi-Framework Beta projects with the **first** thing to check.
+Bucketed by where the failure happens. Each row is a real failure mode seen in Multi-Framework projects with the **first** thing to check.
 
 ## Setup & enablement
 
 | Symptom | Likely cause | First check |
 |---|---|---|
-| Beta toggle missing in Setup | Org is DE / Trailhead Playground (not supported) | Use a sandbox or scratch org |
-| Beta toggle visible but greyed out | User missing **Customize Application** | Assign System Administrator profile or equivalent permission |
+| Feature toggle missing in Setup | Org is DE / Trailhead Playground (not supported) | Use a sandbox or scratch org |
+| Feature toggle visible but greyed out | User missing **Customize Application** | Assign System Administrator profile or equivalent permission |
 | App loads in English only / blank screens elsewhere | Org default language ≠ `en_US` | Scratch: set `"language": "en_US"`. Sandbox: change org language |
 | `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
 | `npm install` fails with Vite peer conflict | Salesforce Vite plugin and latest `@vitejs/plugin-react` target different Vite majors | Pin compatible majors, e.g. Vite 7 + `@vitejs/plugin-react` 5 |
@@ -18,7 +18,10 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 |---|---|---|
 | Build succeeds, deploy fails | `outputDir` in `ui-bundle.json` doesn't match Vite `build.outDir` | Align both to `dist` |
 | Deploy fails with file-count error | UIBundle exceeded 2,500 files | Disable source maps in production; prune `dist/` |
-| Deploy succeeds but app missing from App Launcher | `<isActive>false</isActive>` or wrong `<target>` | Set `isActive: true`; confirm target is `AppLauncher` |
+| Deploy fails: `Invalid Target value 'AppLauncher'` | Stale Beta target name | Use `<target>CustomApplication</target>` for internal apps |
+| Deploy fails: `Property 'uiBundle' not valid in version 66.0` | Project deploys with API v66.0 | Set `sourceApiVersion` to `67.0` or higher |
+| Deploy succeeds but app missing from App Launcher | Missing `SetupEntityAccess`, `<isActive>false</isActive>`, or wrong `<target>` | Query `AppMenuItem.IsAccessible`; grant app access; confirm target is `CustomApplication` |
+| App loads HTTP 400: `Could not determine handler` | UIBundle deployed without companion `CustomApplication` metadata | Add `applications/<AppName>.app-meta.xml` with `<uiBundle><bundleName></uiBundle>` and redeploy |
 | Deploy fails: `ui-bundle.json contains unknown property: 'apiVersion'` | Current validator only allows `outputDir`, `routing`, `headers` | Remove `apiVersion` from `ui-bundle.json`; rely on `sfdx-project.json` / deploy API version |
 | Deploy fails: `apiVersion invalid at this location in type UIBundle` | `.uibundle-meta.xml` includes unsupported `<apiVersion>` | Remove `<apiVersion>` from `.uibundle-meta.xml` |
 | Deploy fails: `isEnabled invalid at this location in type UIBundle` | Metadata uses LWC-style or stale field name | Use `<isActive>true</isActive>` and include `<version>` |
@@ -27,6 +30,16 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 | Hard refresh on `/dashboard` returns 404 | `routing.fallback` not set to `index.html` | Add `"fallback": "index.html"` under `routing` |
 | Trailing slash redirects loop | Conflicting `trailingSlash` and `redirects` rules | Set `trailingSlash: "never"`, remove redundant redirects |
 | Browser console: 404 on `/assets/...` after deploy | Vite `base` not configured for the served path | Set Vite `base` to match Salesforce-served path; rebuild |
+
+## Accessing internal apps
+
+Internal `CustomApplication` UI bundles are served from the `.salesforce.app` domain, not the `.my.salesforce.com` Lightning domain. Launch from App Launcher whenever possible because it handles session bootstrapping. The direct URL pattern is:
+
+```text
+https://<instance>--c.<pod>.my.salesforce.app/app/c__<AppDeveloperName>
+```
+
+Direct navigation to raw `/lwr/application/...` paths on the Lightning domain can return HTTP 400 even when the bundle deployed correctly.
 
 ## Data SDK / GraphQL
 
@@ -59,7 +72,7 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 | FAB never appears | Trusted Domains not added or cookies still restricted | Verify both: My Domain cookie policy off + Trusted Domains entry with iFrame type Lightning Out |
 | Panel opens but disconnects on navigation | Origin mismatch (e.g. wrong port) | Add the **exact** origin including port |
 | Welcome message missing | Agentforce preference disabled | Setup → Einstein → Agentforce Studio → enable Agentforce |
-| Rich Lightning Types render as plain text | Agent action output schema not using a Lightning Type | Update GenAiFunction output schema (delegate to sf-ai-agentforce) |
+| Rich Lightning Types render as plain text | Agent action output schema not using a Lightning Type | Update GenAiFunction output schema (delegate to developing-agentforce; older `sf-skills`: `sf-ai-agentforce`) |
 | Streaming cuts off mid-response | Network keepalive issue or session expiry | Inspect devtools Network; refresh session; retry |
 | Branding tokens don't apply | SDK option key names differ from docs read | Check installed `@salesforce/agentforce-conversation-client` version's TypeScript declarations |
 | ACC works in prod but not local | `localhost` origin missing from Trusted Domains | Add `http://localhost:<port>` |
@@ -94,12 +107,13 @@ When something is broken and you're not sure where:
 5. Is the running user assigned the bundle's permission set?
 6. Did a second deploy report source-tracking conflicts immediately after a successful create? If yes, and the org changes are your just-created bundle, redeploy the local bundle with `--ignore-conflicts`.
 7. For ACC: re-walk the [acc-integration.md](acc-integration.md) checklist top to bottom.
-8. For external apps: confirm all four metadata folders deployed.
-9. Compare against the [`multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) reference repo for the exact pattern you're trying to use.
+8. For internal apps: confirm `applications/<AppName>.app-meta.xml` deployed and `AppMenuItem.IsAccessible` is true for the test user.
+9. For external apps: confirm all four metadata folders deployed.
+10. Compare against the [`multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) reference repo for the exact pattern you're trying to use.
 
 ## Reporting bugs to Salesforce
 
-This is a **Beta**. Real issues exist beyond what's listed here. When filing:
+This feature still changes quickly. Real issues exist beyond what's listed here. When filing:
 
 - Include org type (sandbox / scratch), org language, API version
 - Include `sf --version` and `node -v`

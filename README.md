@@ -1,121 +1,71 @@
 # sf-multiframework
 
-⚛️ **Salesforce Multi-Framework (Beta) skill** — Written and developed by Dylan Andersen
+⚛️ **Salesforce Multi-Framework skill** — by Dylan Andersen
 
 Build React apps that run on the Agentforce 360 Platform via the `UIBundle` metadata type.
 
-> Built from official [Salesforce Developer documentation](references/official-sources.md) and [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Format, rubric structure, and cross-skill orchestration conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Works in any MCP-capable agent or IDE — Agentforce Vibes is optional, not required.
+> Format and cross-skill conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Built from official [Salesforce docs](references/official-sources.md) + [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Soft GA deployment corrections by [Evan Jochims](https://github.com/ejochims), Distinguished, Strategic Solution Engineer at Salesforce. Works in any MCP-capable agent or IDE.
 
-> Beta status: sandbox + scratch orgs only, default language must be `en_US`. Once enabled in an org, the feature **cannot be disabled**.
+## Status (Summer '26 / API v67.0+)
 
-## Features
-
-- ✅ End-to-end React app authoring on the Salesforce Platform
-- ✅ `UIBundle` metadata, `ui-bundle.json`, and `.uibundle-meta.xml` reference
-- ✅ Data SDK (`@salesforce/sdk-data`) + GraphQL UI API patterns
-- ✅ Codegen workflow for type-safe GraphQL operations
-- ✅ Strict / Tolerant / Permissive error-handling strategies
-- ✅ Agentforce Conversation Client (ACC) embed patterns
-- ✅ Three styling tracks: SLDS blueprints · `design-system-react` · Tailwind + shadcn
-- ✅ Internal (App Launcher) vs External (Experience Cloud) app templates
-- ✅ Cross-skill orchestration with `sf-apex`, `sf-ai-agentforce`, `sf-deploy`
+Sandbox + scratch orgs only · default language `en_US` · **cannot be disabled once enabled**.
 
 ## Requirements
 
 | Requirement | Value |
 |---|---|
-| Org type | Sandbox or Scratch (Beta) |
+| Org type | Sandbox or Scratch |
 | Default language | `en_US` |
-| API version | v66.0+ |
+| API version | v67.0+ |
 | Node.js | v22+ |
-| `sf` CLI | latest with `@salesforce/plugin-ui-bundle-dev` |
-| License (external apps) | Customer / Partner Community user licenses |
-| ACC license | Agentforce + Employee Agent configured |
+| `sf` CLI | latest + `@salesforce/plugin-ui-bundle-dev` |
+| External apps | Community user licenses |
+| ACC | Agentforce + Employee Agent configured |
 
 ## Quick Start
 
-### 1. Enable Multi-Framework in your org
-Setup → "Salesforce Multi-Framework" → **Enable Beta**.
-
-### 2. Install the CLI plugin
 ```bash
+# 1. Enable "Salesforce Multi-Framework" in Setup, then install the plugin
 sf plugins install @salesforce/plugin-ui-bundle-dev
+
+# 2. Scaffold (reactbasic = internal app, default = manual wiring)
+sf template generate ui-bundle --name myApp --template reactbasic
+
+# 3. Develop locally
+cd force-app/main/default/uiBundles/myApp && npm install
+npm run graphql:schema && npm run graphql:codegen   # types from connected org
+npm run dev                                          # Vite dev server
+
+# 4. Build + deploy (internal apps need the companion CustomApplication)
+npm run build && cd ../../../../..
+sf project deploy start \
+  --source-dir force-app/main/default/uiBundles/myApp \
+  --source-dir force-app/main/default/applications \
+  --target-org TARGET
 ```
 
-### 3. Scaffold an app
-```bash
-# Internal employee app (App Launcher target)
-sf template generate ui-bundle --name myApp --template reactinternalapp
+Internal apps require `applications/<AppName>.app-meta.xml` with `<uiBundle>myApp</uiBundle>`, deployed on **API v67.0+** and granted to users via `SetupEntityAccess`. Older Beta docs may say `reactinternalapp` / `reactexternalapp` — verify with `sf template generate ui-bundle --help`.
 
-# External B2B/B2C portal (Experience Cloud target)
-sf template generate ui-bundle --name myApp --template reactexternalapp
-```
+## Critical Rules
 
-### 4. Develop locally
-```bash
-cd force-app/main/default/uiBundles/myApp
-npm install
-npm run graphql:schema      # introspect connected org
-npm run graphql:codegen     # generate types
-npm run dev                 # Vite dev server
-```
+1. Use `@salesforce/sdk-data` — never raw `fetch()` / `axios` to Salesforce.
+2. GraphQL UI API wraps every field in `{ value }`.
+3. `ui-bundle.json` needs `routing.fallback: "index.html"` for SPA refresh.
+4. `.uibundle-meta.xml` `target` (`CustomApplication` vs `Experience`) is binding — not hot-swappable.
+5. One styling system per component; UIBundle has a 2,500-file ceiling.
+6. Inside a React bundle, `lightning/*`, `@wire`, and most `@salesforce/*` packages are unsupported (`@salesforce/sdk-data`, ACC, and `@salesforce/ui-bundle` excepted).
 
-### 5. Deploy
-```bash
-npm run build
-cd ../../../../..
-sf project deploy start --source-dir force-app/main/default/uiBundles/myApp --target-org TARGET
-```
-
-## Scoring System
-
-| Category | Points | Focus |
-|---|---|---|
-| Project Structure | 20 | `uiBundles/` layout, metadata files, output dir |
-| Routing & Hosting | 15 | `ui-bundle.json` SPA fallback, target match |
-| Data Access | 25 | Data SDK usage, GraphQL `{ value }` shape, error strategy |
-| Styling Discipline | 10 | One system per component, SLDS focus tokens |
-| ACC Integration | 15 | Cookies, Trusted Domains, mount lifecycle |
-| Deployment Readiness | 15 | Build artifacts, file-count budget, target org sanity |
-
-**Thresholds:** 90+ Excellent · 75–89 Good · 60–74 Needs Work · <60 Block deploy
-
-Full rubric: [references/scoring-rubric.md](references/scoring-rubric.md)
-
-## Key Rules
-
-1. **Use `@salesforce/sdk-data`** — never raw `fetch()` / `axios` to Salesforce endpoints.
-2. **GraphQL UI API wraps every field in `{ value }`** — comment this for React-first developers.
-3. **`ui-bundle.json` needs `routing.fallback: "index.html"`** for SPA refresh on sub-routes.
-4. **`.uibundle-meta.xml` `target` is binding** — `AppLauncher` vs `Experience` cannot be hot-swapped.
-5. **ACC requires My Domain cookies + Trusted Domains for Inline Frames + Agentforce preference** — all three.
-6. **One styling system per component** — mixing SLDS + Tailwind inside a single component is the most common review failure.
-7. **Beta = sandbox + scratch only, `en_US` only**. DE orgs and Playgrounds are unsupported.
-8. **Multi-Framework can't be disabled** once enabled in an org. Treat the toggle as one-way.
-9. **UIBundle has a 2,500-file ceiling** — prune `dist/` source maps and unused assets.
-10. **Inside a React UI bundle**, `lightning/*` modules, `@wire`, and most `@salesforce/*` packages are **not** supported (`@salesforce/sdk-data`, the ACC, and `@salesforce/ui-bundle` are exceptions).
-
-## Documentation
-
-| Document | Description |
-|---|---|
-| [SKILL.md](SKILL.md) | Main entry point with rules and workflow |
-| [references/](references/) | Topic-specific deep guides |
-| [assets/](assets/) | Reference `ui-bundle.json`, metadata, and code snippets |
+Full rules, workflow, and the 100-point scoring rubric live in **[SKILL.md](SKILL.md)** and **[references/](references/)**.
 
 ## Cross-Skill Workflow
 
 ```
-sf-apex (REST endpoints) ─┐
-sf-ai-agentforce (Agent) ─┤→  sf-multiframework  →  sf-deploy
-sf-permissions (PSets) ───┘                          (CI deploy)
+generating-apex (REST)            ─┐
+developing-agentforce (Agent)     ─┤→  sf-multiframework  →  deploying-metadata
+generating-permission-set (PSets) ─┘                         (CI deploy)
 ```
 
-## Official Resources
-
-- [React App Overview (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-overview.html)
-- [Org Configuration (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-setup.html)
-- [Multi-Framework Recipes (GitHub)](https://github.com/trailheadapps/multiframework-recipes)
+Older `sf-skills` releases name these `sf-apex`, `sf-ai-agentforce`, `sf-permissions`, `sf-deploy` — see [CREDITS.md](CREDITS.md) for the full mapping.
 
 ## License
 

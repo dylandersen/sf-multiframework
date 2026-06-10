@@ -154,7 +154,7 @@ once the user releases.
 
 ## 4) `--top-offset` for the Salesforce frame chrome
 
-Internal AppLauncher apps render inside a Lightning frame with the standard
+Internal `CustomApplication` apps launched from App Launcher render inside a Lightning frame with the standard
 Salesforce blue header bar above your shell. If you use `height: 100vh` on
 your app shell, the header eats the bottom of your content.
 

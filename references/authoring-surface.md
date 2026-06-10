@@ -61,7 +61,7 @@ A reasonable non-Vibes workflow:
 ```bash
 # 1. Scaffold
 cd my-dx-project
-sf template generate ui-bundle --name myApp --template reactinternalapp
+sf template generate ui-bundle --name myApp --template reactbasic
 cd force-app/main/default/uiBundles/myApp
 npm install
 
@@ -76,7 +76,9 @@ npm run graphql:schema
 # 4. Build + deploy
 npm run build
 cd ../../../../..
-sf project deploy start --source-dir force-app/main/default/uiBundles/myApp
+sf project deploy start \
+  --source-dir force-app/main/default/uiBundles/myApp \
+  --source-dir force-app/main/default/applications
 ```
 
 ## Prompt patterns that work in any assistant

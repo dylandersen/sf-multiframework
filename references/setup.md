@@ -1,6 +1,6 @@
 # Configure Your Org for React Development
 
-> Beta availability: **sandbox and scratch orgs only**. Default language must be `en_US`. Developer Edition orgs and Trailhead Playgrounds are not supported.
+> Current availability: **sandbox and scratch orgs only**. Default language must be `en_US`. Developer Edition orgs and Trailhead Playgrounds are not supported.
 
 ## 1. Pre-flight
 
@@ -9,12 +9,12 @@
 - **Node.js v22+** and **npm**
 - For external apps: planned **Customer Community / Customer Community Plus** (B2C) or **Partner Community / Channel Account** (B2B) user licenses
 
-## 2. Enable Multi-Framework (Beta)
+## 2. Enable Multi-Framework
 
 > Required permission: **Customize Application**.
 
-1. Setup → search **"Salesforce Multi-Framework"** → click **React Development with Salesforce Multi-Framework (Beta)**.
-2. Click **Enable Beta** → confirm.
+1. Setup → search **"Salesforce Multi-Framework"** → click **React Development with Salesforce Multi-Framework**.
+2. Click **Enable** → confirm.
 3. **Cannot be disabled** afterwards. Treat the toggle as one-way.
 
 ## 3. Authorize the org
@@ -114,8 +114,8 @@ Expected: org opens, App Launcher contains your app (after deploy), or Digital E
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Beta toggle missing in Setup | DE org or Playground | Use a sandbox or scratch org |
-| Beta toggle visible but not clickable | User lacks **Customize Application** | Assign the System Admin profile or equivalent |
+| Feature toggle missing in Setup | DE org or Playground | Use a sandbox or scratch org |
+| Feature toggle visible but not clickable | User lacks **Customize Application** | Assign the System Admin profile or equivalent |
 | `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
 | Vite dev server starts but data calls 401 | Org not authorized in current shell | `sf org login web -a <alias>` |
 | ACC FAB never appears | Trusted Domains not added or cookies still restricted | Re-check steps 7b and 7c |

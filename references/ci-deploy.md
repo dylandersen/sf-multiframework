@@ -12,6 +12,8 @@ Multi-Framework has deploy rules that don't exist for plain LWC. Get these wrong
 | **`tsc --noEmit && vite build` must pass** | TypeScript errors block the build, and `--noEmit` avoids stray root artifacts being deployed as bundle members. |
 | **`npm run lint` must pass** | ESLint flat config; violations block CI. |
 | **Deploy from project root** | `sf project deploy start` resolves `force-app` from the root, not the bundle dir. |
+| **API v67.0+ for internal apps** | `CustomApplication.uiBundle` is not valid in v66.0. |
+| **Internal apps deploy `applications/` with the bundle** | The CustomApplication registers the App Launcher route for the UIBundle. |
 
 ## Standard deploy sequence
 
@@ -27,6 +29,7 @@ npm run build            # → dist/
 cd -
 sf project deploy start \
   --source-dir force-app/main/default/uiBundles/myApp \
+  --source-dir force-app/main/default/applications \
   --target-org TARGET_ORG \
   --json
 ```
@@ -123,11 +126,11 @@ Without `webAppOptIn`, the scratch org won't have Multi-Framework enabled and me
   "name": "my-react-app",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "66.0"
+  "sourceApiVersion": "67.0"
 }
 ```
 
-`sourceApiVersion` should match the target org API version. Current UI bundle validators can reject `apiVersion` inside `ui-bundle.json`, so keep the API version in `sfdx-project.json` and deployment tooling rather than the runtime config file.
+`sourceApiVersion` should be `67.0` or higher for internal UI bundle apps because `CustomApplication.uiBundle` does not exist in v66.0. Current UI bundle validators can reject `apiVersion` inside `ui-bundle.json`, so keep the API version in `sfdx-project.json` and deployment tooling rather than the runtime config file.
 
 ## CI/CD reference workflow (GitHub Actions)
 
@@ -212,7 +215,7 @@ jobs:
       - name: Authenticate
         run: echo "${{ secrets.SFDX_AUTH_URL }}" | sf org login sfdx-url --set-default
       - name: Deploy to sandbox
-        run: sf project deploy start --source-dir force-app/main/default/uiBundles/myApp --json
+        run: sf project deploy start --source-dir force-app/main/default/uiBundles/myApp --source-dir force-app/main/default/applications --json
 ```
 
 ### What to cache
@@ -236,7 +239,9 @@ sf org create scratch \
   --set-default
 
 npm run build --prefix force-app/main/default/uiBundles/myApp
-sf project deploy start --source-dir force-app/main/default/uiBundles/myApp
+sf project deploy start \
+  --source-dir force-app/main/default/uiBundles/myApp \
+  --source-dir force-app/main/default/applications
 sf org assign permset --name MyAppUser
 sf org open
 ```
@@ -264,12 +269,15 @@ The reference repo uses Husky + lint-staged:
 |---|---|---|
 | `UIBundle: The file count ... exceeds the maximum` | >2,500 files in `dist/` | Prune source maps, sprite copies, fonts |
 | `Component type 'UIBundle' not found` | API version mismatch or Multi-Framework not enabled | Align `sourceApiVersion` with the org version and confirm Multi-Framework is enabled |
+| `Invalid Target value 'AppLauncher'` | Stale Beta target | Use `<target>CustomApplication</target>` |
+| `Property 'uiBundle' not valid in version 66.0` | `sourceApiVersion` is too low | Set `sourceApiVersion` to `67.0` or higher |
 | `ui-bundle.json contains unknown property: 'apiVersion'` | Runtime config schema only allows `outputDir`, `routing`, `headers` | Remove `apiVersion` from `ui-bundle.json` |
 | `apiVersion invalid at this location in type UIBundle` | `.uibundle-meta.xml` contains unsupported `<apiVersion>` | Remove `<apiVersion>` from the UIBundle XML |
 | `isEnabled invalid at this location in type UIBundle` | Wrong field name in `.uibundle-meta.xml` | Use `<isActive>true</isActive>` and include `<version>` |
 | `Metadata API response: Required field 'masterLabel' missing` | `.uibundle-meta.xml` missing fields | Ensure `<masterLabel>`, `<isActive>`, `<version>` |
 | `Insufficient access rights on cross-reference id` | Running user lacks permset to deploy UIBundle | Grant the deploy user `ModifyAllData` or the right system permission |
-| Deploy succeeds but app never appears | Wrong `target` in `.uibundle-meta.xml`; or Experience site missing `appContainer: true` | Confirm `AppLauncher` vs `Experience` and `digitalExperiences/.../content.json` |
+| Deploy succeeds but app never appears | Missing `SetupEntityAccess`, wrong `target` in `.uibundle-meta.xml`, or Experience site missing `appContainer: true` | Confirm `CustomApplication` vs `Experience`, grant app access, and check `digitalExperiences/.../content.json` |
+| HTTP 400 `Could not determine handler` | Internal bundle deployed without `applications/<AppName>.app-meta.xml` | Deploy the companion CustomApplication metadata with `<uiBundle>` |
 | `sf template generate ui-bundle` not recognized | Plugin missing | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
 | `UIBundleSettings` feature not enabled on scratch org | `webAppOptIn` not set | Add `"UIBundleSettings": { "webAppOptIn": true }` to scratch def |
 | Second deploy reports conflicts on the bundle just created | Source tracking sees the org-created bundle as remote changes | If the remote state is your previous deploy, rerun the targeted bundle deploy with `--ignore-conflicts` |

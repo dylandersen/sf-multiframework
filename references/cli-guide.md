@@ -20,18 +20,18 @@ This plugin provides:
 ```bash
 sf template generate ui-bundle \
   --name myApp \
-  --template reactinternalapp     # or reactexternalapp
+  --template reactbasic     # or default
 ```
 
 The `--name` becomes the bundle directory name and the metadata API name. Stick with a developer-name-friendly identifier (no spaces, no leading digits).
 
-### Generate a new DX project + external app
+Check the installed plugin before relying on template names:
 
 ```bash
-sf template generate project --template reactexternalapp
+sf template generate ui-bundle --help
 ```
 
-Use this when starting from a clean directory.
+Older Beta docs may mention `reactinternalapp` / `reactexternalapp`; current Summer '26 plugin builds expose `reactbasic` and `default`.
 
 ## Local development
 
@@ -65,8 +65,11 @@ Typically `tsc --noEmit && vite build`. Output lands in the directory referenced
 # From the project root
 sf project deploy start \
   --source-dir force-app/main/default/uiBundles/myApp \
+  --source-dir force-app/main/default/applications \
   --target-org TARGET_ORG
 ```
+
+For internal apps, the `applications/` metadata is the `CustomApplication` route registration. Without it, the bundle can deploy but fail at runtime with HTTP 400.
 
 For external apps, deploy the companion folders **in the same call**:
 
@@ -97,6 +100,18 @@ mcp_Salesforce_DX_deploy_metadata({
 
 For external apps, include all four supporting folders in `sourceDir`.
 
+For internal apps, include the `applications/` folder:
+
+```js
+mcp_Salesforce_DX_deploy_metadata({
+  usernameOrAlias: "myorg",
+  sourceDir: [
+    "force-app/main/default/uiBundles/myApp",
+    "force-app/main/default/applications"
+  ]
+})
+```
+
 ## Open the org
 
 ```bash
@@ -118,9 +133,12 @@ sf data import tree --plan ./data/data-plan.json --target-org TARGET_ORG
 | Symptom | Cause | Fix |
 |---|---|---|
 | `sf template generate ui-bundle` not recognized | Plugin missing | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
+| Template name `reactinternalapp` not recognized | Stale Beta template name | Use `reactbasic` or `default`, or check `sf template generate ui-bundle --help` |
 | `npm run graphql:schema` fails with auth error | No authorized org in this shell | `sf org login web -a alias` and re-run |
 | Deploy fails with file-count error | UIBundle ≥ 2,500 files | Disable source maps, prune `dist/` |
-| Deploy succeeds but app missing from App Launcher | `<isActive>` is `false` or `<target>` mismatch | Set `isActive` true; confirm target |
+| Deploy fails with `Invalid Target value 'AppLauncher'` | Stale Beta target | Use `<target>CustomApplication</target>` |
+| Deploy fails with `Property 'uiBundle' not valid in version 66.0` | API version too low | Set `sourceApiVersion` to `67.0` or higher |
+| Deploy succeeds but app missing from App Launcher | Missing `SetupEntityAccess`, `<isActive>` is `false`, or `<target>` mismatch | Grant app access; set `isActive` true; confirm target |
 | External app deploys but site is empty | Forgot to deploy `digitalExperiences`, `networks`, or `sites` | Re-deploy with all four folders |
 | Vite dev server data calls 401 | Org authorization expired | `sf org login web -a alias` |
 | Build OK locally but deploy fails | `outputDir` in `ui-bundle.json` doesn't match where the build emits | Align `outputDir` with `vite.config.ts` `build.outDir` |

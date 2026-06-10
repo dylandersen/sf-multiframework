@@ -4,11 +4,15 @@
 
 Written and maintained by **Dylan Andersen**.
 
-The format, rubric structure, and cross-skill orchestration conventions used in this skill were inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro) — the same patterns that shape `sf-ai-agentforce`, `sf-ai-agentscript`, `sf-lwc`, `sf-apex`, and the broader SF Skills family.
+The format, rubric structure, and cross-skill orchestration conventions used in this skill were inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro) — the same patterns that shape `developing-agentforce`, `generating-lwc-components`, `generating-apex`, and the broader [Salesforce SF Skills family](https://github.com/forcedotcom/sf-skills).
 
 ## Author
 
 - **Dylan Andersen** — skill design, reference expansion, recipe-pattern distillation, and ongoing maintenance
+
+## Contributors
+
+- [**Evan Jochims**](https://github.com/ejochims) — Distinguished, Strategic Solution Engineer at Salesforce; Summer '26 / API v67.0 deployment feedback covering `CustomApplication`, app access, API version, launch URLs, and current CLI templates
 
 ## Inspiration
 
@@ -35,12 +39,18 @@ The format, rubric structure, and cross-skill orchestration conventions used in 
 
 ### Related SF Skills (Jag's framework, inspiration for this skill's conventions)
 
-- [`sf-ai-agentforce`](../sf-ai-agentforce/SKILL.md) — Builder metadata agents (ACC target)
-- [`sf-ai-agentscript`](../sf-ai-agentscript/SKILL.md) — `.agent` authoring bundles
-- [`sf-lwc`](../sf-lwc/SKILL.md) — LWC authoring
-- [`sf-apex`](../sf-apex/SKILL.md) — Apex classes / `@RestResource`
-- [`sf-deploy`](../sf-deploy/SKILL.md) — metadata deploy orchestration
-- [`sf-permissions`](../sf-permissions/SKILL.md) — permission sets for UI bundles
+The [`forcedotcom/sf-skills`](https://github.com/forcedotcom/sf-skills) repo renamed its skills (the original release used `sf-*` names). Both names are listed below so this skill resolves the right delegate whether you're on the current or original `sf-skills` release.
+
+| Current name | Older `sf-skills` alias | Scope |
+|---|---|---|
+| [`developing-agentforce`](https://github.com/forcedotcom/sf-skills/tree/main/skills/developing-agentforce) | `sf-ai-agentforce` / `sf-ai-agentscript` | Builder metadata + `.agent` Agent Script agents (ACC target) |
+| [`testing-agentforce`](https://github.com/forcedotcom/sf-skills/tree/main/skills/testing-agentforce) | `sf-ai-agentforce-testing` | Agent test specs / evaluations |
+| [`generating-lwc-components`](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-lwc-components) | `sf-lwc` | LWC authoring |
+| [`generating-apex`](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-apex) | `sf-apex` | Apex classes / `@RestResource` |
+| [`querying-soql`](https://github.com/forcedotcom/sf-skills/tree/main/skills/querying-soql) | `sf-soql` | SOQL helpers for backing Apex |
+| [`deploying-metadata`](https://github.com/forcedotcom/sf-skills/tree/main/skills/deploying-metadata) | `sf-deploy` | metadata deploy orchestration |
+| [`generating-permission-set`](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-permission-set) | `sf-permissions` | permission sets for UI bundles |
+| [`building-sf-integrations`](https://github.com/forcedotcom/sf-skills/tree/main/skills/building-sf-integrations) | `sf-integration` | Named Credentials / callouts |
 
 ## License
 

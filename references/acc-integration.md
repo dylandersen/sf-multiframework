@@ -125,7 +125,7 @@ export function ChatPanel() {
 | FAB never appears | Trusted Domain not added, or cookies still restricted | Verify both Setup steps; ensure iFrame type is Lightning Out |
 | Panel opens but agent disconnects on nav | Origin mismatch between deployed app and Trusted Domain entry | Add the exact origin (`https://app.example.com`, including port if non-standard) |
 | Welcome message missing | Agentforce preference disabled | Setup → Einstein → enable Agentforce |
-| Rich Lightning Types render as plain text | Agent action output not configured to use a Lightning Type | Update GenAiFunction output schema (delegate to sf-ai-agentforce) |
+| Rich Lightning Types render as plain text | Agent action output not configured to use a Lightning Type | Update GenAiFunction output schema (delegate to developing-agentforce; older `sf-skills`: `sf-ai-agentforce`) |
 | Streaming stutters / cuts off | Network instability — ACC handles this, but logs help | Inspect browser devtools → Network → keepalive |
 | Chat panel state lost on React re-render | Widget destroyed/recreated | Memoize the container, only recreate when mount key changes |
 | Branding doesn't apply | SDK style tokens passed wrong key names | Check installed package version's docs for current option names |
@@ -143,7 +143,7 @@ export function ChatPanel() {
 | External-facing customer chat | Standalone Agentforce Conversation Client (separate guide) |
 | Programmatic open/close inside a custom LWC | ACC API directly |
 | Chat with a Service Agent (not Employee) | Different ACC flavor — check the standalone guide |
-| Custom UI for agent output you fully control | Build the agent action with a custom Lightning Type and a custom LWC renderer (delegate to sf-ai-agentforce / sf-lwc) |
+| Custom UI for agent output you fully control | Build the agent action with a custom Lightning Type and a custom LWC renderer (delegate to developing-agentforce / generating-lwc-components; older `sf-skills`: `sf-ai-agentforce` / `sf-lwc`) |
 
 ## See also
 

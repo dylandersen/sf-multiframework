@@ -9,6 +9,7 @@ Drop-in metadata + config files for a Multi-Framework UI bundle.
 | File | Use |
 |---|---|
 | `myApp.uibundle-meta.xml` | UIBundle metadata. Rename file to match your `--name`. Update `<masterLabel>` and `<target>`. |
+| `MyApp.app-meta.xml` | Companion `CustomApplication` metadata for internal App Launcher apps. Update `<label>` and `<uiBundle>`. |
 | `ui-bundle.json` | Runtime configuration with SPA fallback. Keep top-level keys to `outputDir`, `routing`, and `headers`. |
 | `external-content.json` | `digitalExperiences/sfdc_cms_site/content.json` for external (`Experience`-target) apps. Update `appSpace` to `c__<DeveloperName>` (or `<Namespace>__<DeveloperName>`). |
 | `vite.config.ts` | Minimal Vite config with `@salesforce/vite-plugin-ui-bundle` and path aliases. |
@@ -28,7 +29,7 @@ Reference React + GraphQL code patterns.
 
 ## What's intentionally not here
 
-- A full LWR `digitalExperiences` bundle — too org-specific; use `sf template generate ui-bundle --template reactexternalapp`.
+- A full LWR `digitalExperiences` bundle — too org-specific; start from `reactbasic` or `default`, then add org-specific Experience metadata.
 - Complete `package.json` for the bundle — versions move too fast; use the template scaffold.
 - ESLint config — the templates ship a flat config that's well-tuned to React 19 + GraphQL ESLint plugin.
 

@@ -150,7 +150,7 @@ Skip when your generated types are already flat / non-connection.
 
 ```ts
 const res = await sdk.fetch?.(
-  "/services/data/v66.0/ui-api/records/001xx0000000000",
+  "/services/data/v67.0/ui-api/records/001xx0000000000",
   { method: "GET" }
 );
 ```
@@ -199,7 +199,7 @@ Anything outside this list is not guaranteed to work and should go through Apex 
 
 ```ts
 // ❌ NEVER — bypasses auth, CSRF, base path
-const res = await fetch("/services/data/v66.0/ui-api/records/001...");
+const res = await fetch("/services/data/v67.0/ui-api/records/001...");
 
 // ❌ NEVER — same problem
 const res = await axios.get("/services/data/...");

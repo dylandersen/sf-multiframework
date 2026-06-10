@@ -32,7 +32,7 @@ Total: **100 points** across 6 categories. Use this to grade an app or PR.
 |---|---|---|
 | SPA fallback set | 4 | `routing.fallback: "index.html"` |
 | `trailingSlash` chosen and consistent | 2 | `never` / `always` / `auto` — matches in-app router |
-| `target` matches deployment intent | 4 | `AppLauncher` for internal, `Experience` for external; companion metadata present for external |
+| `target` matches deployment intent | 4 | `CustomApplication` for internal, `Experience` for external; companion metadata present (`applications/` internal, Experience folders external) |
 | Rewrites / redirects (if any) are sane | 2 | Status codes correct; no redirect loops |
 | Hard refresh on a deep route works | 3 | Manual smoke-test |
 
@@ -83,9 +83,10 @@ Total: **100 points** across 6 categories. Use this to grade an app or PR.
 | `npm run lint` passes | 2 | Clean lint output |
 | `npm run build` passes | 3 | Clean build, type-check passes |
 | `dist/` size within budget | 2 | Under 2,500 files |
-| Deploy via MCP first, CLI as fallback | 2 | Workflow uses `mcp_Salesforce_DX_deploy_metadata` when available |
+| Deploy via MCP first, CLI as fallback | 1 | Workflow uses `mcp_Salesforce_DX_deploy_metadata` when available |
 | External app: all four metadata folders deployed together | 2 | `digitalExperienceConfigs/`, `digitalExperiences/`, `networks/`, `sites/` |
 | Permission set assigned to running user | 1 | App is reachable for the test user |
+| Internal app: `SetupEntityAccess` granted | 1 | `AppMenuItem.IsAccessible` is true for the test user |
 | Sample data plan available if applicable | 1 | `sf data import tree --plan ...` works |
 | Smoke-test pass: App Launcher / Digital Experiences | 1 | App appears and renders |
 | Smoke-test pass: hard-refresh deep route | 1 | No 404 |
@@ -111,5 +112,6 @@ Total                   : __ / 100
 - Multi-Framework enabled in a non-sandbox/scratch org with production data
 - ACC integration without My Domain cookie policy + Trusted Domains both configured
 - External app deployed without companion `digitalExperiences` / `networks` / `sites`
+- Internal app deployed without companion `applications/<AppName>.app-meta.xml` or `SetupEntityAccess`
 - Lightning base components (`lightning-card`, etc.) imported from a React UI bundle (won't work)
 - `@wire` decorators inside the React app (not supported)

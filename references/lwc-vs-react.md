@@ -30,11 +30,11 @@ or the Salesforce mobile app as a reusable component?
 | **Styling** | Auto-applied SLDS via base components | SLDS blueprints, `design-system-react`, or Tailwind/shadcn — you choose |
 | **Data access** | LDS, `@wire`, Apex `@AuraEnabled` | `@salesforce/sdk-data` (GraphQL UI API + `fetch` allow-list) |
 | **Build / deploy** | First-class metadata, `sf project deploy` | UIBundle metadata; build artifacts in `dist/` ship with the bundle |
-| **Available surfaces** | Lightning Experience, Experience Cloud (LWR + Aura), Mobile app, Page templates, Flow Screens, App Builder | App Launcher (`AppLauncher`) or Experience Cloud site (`Experience`) |
+| **Available surfaces** | Lightning Experience, Experience Cloud (LWR + Aura), Mobile app, Page templates, Flow Screens, App Builder | App Launcher via `CustomApplication` or Experience Cloud site (`Experience`) |
 | **Embedding inside another framework** | Native | Hosted alone (cross-framework via Micro-Frontends Developer Preview) |
 | **Languages** | Standard JS/TS, HTML templates | TypeScript / JSX |
 | **Dark mode / theming** | Built-in via SLDS 2 tokens | DIY via Tailwind tokens or SLDS 2 |
-| **Org enablement** | GA, no toggle | Beta toggle in sandbox/scratch only; **cannot be disabled** once enabled |
+| **Org enablement** | GA, no toggle | Feature toggle in sandbox/scratch only; **cannot be disabled** once enabled |
 
 ## Pick LWC when…
 
@@ -60,7 +60,7 @@ or the Salesforce mobile app as a reusable component?
 |---|---|---|
 | Custom record-page tile showing related contacts | **LWC** | Embeds in the record page; needs `@wire` and Lightning navigation |
 | Customer self-service portal with login, profile, support cases | **React** (`Experience` target) | Self-contained SPA with custom branding |
-| Internal sales productivity app with charts and complex tables | **React** (`AppLauncher` target) | Use a charting library + custom layout |
+| Internal sales productivity app with charts and complex tables | **React** (`CustomApplication` target) | Use a charting library + custom layout |
 | Form embedded in a Flow screen | **LWC** | Flow screens take LWCs natively, not React |
 | Mobile-first field service interface | **LWC** | Salesforce Mobile App native rendering |
 | Custom dashboard with shadcn UI + Tailwind | **React** | Design system fits poorly inside SLDS |

@@ -4,14 +4,15 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 
 ## Org & Environment
 
-- [ ] Org is **Sandbox** or **Scratch** (DE / Playgrounds unsupported in Beta)
+- [ ] Org is **Sandbox** or **Scratch** (DE / Playgrounds unsupported in the current release)
 - [ ] Org default language is **`en_US`** (scratch org def explicitly sets `"language": "en_US"`)
-- [ ] **Salesforce Multi-Framework (Beta)** enabled in Setup → cannot be disabled later
+- [ ] **Salesforce Multi-Framework** enabled in Setup → cannot be disabled later
 - [ ] User has **Customize Application** permission to enable the feature
 - [ ] **Node.js v22+** installed (`node -v`)
 - [ ] **Salesforce CLI** is current (`sf update`)
 - [ ] **`@salesforce/plugin-ui-bundle-dev`** installed (`sf plugins`)
 - [ ] **Salesforce Extension Pack** installed in VS Code (or equivalent IDE)
+- [ ] `sfdx-project.json` has `"sourceApiVersion": "67.0"` or higher (`CustomApplication.uiBundle` is unavailable in v66.0)
 
 ## Project Layout
 
@@ -23,6 +24,15 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 - [ ] API version is set through `sfdx-project.json` / deploy API version, not `ui-bundle.json`
 - [ ] For SPAs: `routing.fallback: "index.html"` is set
 - [ ] `package.json` inside the bundle (separate from the project root `package.json`)
+
+## Internal Apps Only (`target: CustomApplication`)
+
+- [ ] `<appName>.uibundle-meta.xml` uses `<target>CustomApplication</target>` (`AppLauncher` is deprecated and rejected in v67.0)
+- [ ] `force-app/main/default/applications/<AppName>.app-meta.xml` exists
+- [ ] The `CustomApplication` metadata has `<uiBundle><appName></uiBundle>`
+- [ ] Bundle and `applications/` metadata deploy together
+- [ ] The test user's permission set is linked to the app via `SetupEntityAccess`
+- [ ] App is launched from App Launcher or the `.salesforce.app` URL pattern, not a raw `/lwr/application/...` Lightning URL
 
 ## External Apps Only (`target: Experience`)
 
@@ -70,7 +80,7 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 - [ ] `npm run build` passes (this is the artifact that ships)
 - [ ] `dist/` size is sane and < 2,500 files (UIBundle ceiling)
 - [ ] Build script does not emit TypeScript side artifacts at the bundle root (`*.tsbuildinfo`, `vite.config.js`, `vite.config.d.ts`)
-- [ ] Deploy via `sf project deploy start --source-dir force-app/main/default/uiBundles/<appName>` (or MCP equivalent)
+- [ ] Deploy via `sf project deploy start --source-dir force-app/main/default/uiBundles/<appName> --source-dir force-app/main/default/applications` for internal apps (or MCP equivalent)
 - [ ] Smoke-test: open the app in App Launcher (internal) or Digital Experiences (external)
 - [ ] Smoke-test: hard-refresh on a deep route — should not 404
 

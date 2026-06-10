@@ -1,4 +1,4 @@
-# Overview — Salesforce Multi-Framework (Beta)
+# Overview — Salesforce Multi-Framework
 
 > **Sources.** Skill built from Salesforce developer documentation (see [official-sources.md](official-sources.md)) and code patterns from [trailheadapps/multiframework-recipes](https://github.com/trailheadapps/multiframework-recipes). Skill framework adapted from **Jag Valaiyapathy's SF Skills repo** (same rubric, format, and governance conventions used across `sf-*` skills).
 
@@ -9,7 +9,7 @@ Salesforce Multi-Framework lets you build apps in non-Lightning UI frameworks �
 When deployed, a `UIBundle` record:
 
 - declares the app's identity on the platform
-- declares which containers can host it (App Launcher, Experience Cloud)
+- declares which containers can host it (`CustomApplication`, Experience Cloud)
 - pulls runtime assets, images, and metadata from Salesforce CMS storage
 
 A single `UIBundle` can contain up to **2,500 files**.
@@ -31,6 +31,7 @@ The feature is positioned for **self-contained SPAs and highly customized experi
 |---|---|---|
 | `UIBundle` metadata | `force-app/main/default/uiBundles/<app>/` | App identity & container declaration |
 | `<app>.uibundle-meta.xml` | bundle root | Metadata definition (target, isActive, version) |
+| `CustomApplication` metadata | `force-app/main/default/applications/<App>.app-meta.xml` | Internal App Launcher route registration via `<uiBundle>` |
 | `ui-bundle.json` | bundle root | Runtime configuration (output dir, routing, API version) |
 | App source | `src/`, `package.json`, etc. | The React app itself |
 | Build output | `dist/` (Vite default) | What actually gets served at runtime |
@@ -41,8 +42,10 @@ The `<target>` element in `.uibundle-meta.xml` accepts:
 
 | Target | Effect | Use case |
 |---|---|---|
-| `AppLauncher` (default) | App appears in the App Launcher for authenticated users | Internal employee apps (B2E) |
+| `CustomApplication` | App appears in the App Launcher for authenticated users | Internal employee apps (B2E) |
 | `Experience` | App is served by an Experience Cloud site | External B2B / B2C portals |
+
+`AppLauncher` was the Beta target name and is deprecated. Use `CustomApplication` on API v67.0+.
 
 ## What you can use inside the React app
 
@@ -55,7 +58,7 @@ The `<target>` element in `.uibundle-meta.xml` accepts:
 | `@salesforce/ui-bundle` helpers | |
 | `@salesforce/vite-plugin-ui-bundle` (dev only) | |
 
-## Beta limitations
+## Current limitations
 
 - **Sandbox and scratch orgs only** — no DE orgs, no Trailhead Playgrounds.
 - **Default language must be `en_US`** — known issue with non-English orgs.
@@ -91,10 +94,10 @@ See [lwc-vs-react.md](lwc-vs-react.md) for a structured comparison.
 
 ### "Internal or external app?"
 
-Pick `AppLauncher` (internal) when:
+Pick `CustomApplication` (internal) when:
 - Users are employees authenticated via Salesforce.
 - The app appears alongside other Lightning apps in the App Launcher.
-- You want the simplest deployment path.
+- You can deploy `applications/<AppName>.app-meta.xml` and grant app access with `SetupEntityAccess`.
 
 Pick `Experience` (external) when:
 - Users are partners or customers (B2B / B2C).
@@ -105,12 +108,12 @@ Pick `Experience` (external) when:
 
 ```
 Setup org (one-time)
-  ├─ Enable Multi-Framework (Beta)
+  ├─ Enable Multi-Framework
   ├─ Configure My Domain / Trusted Domains (if using ACC)
   └─ Authorize org via sf CLI
 
 Scaffold project
-  └─ sf template generate ui-bundle --template reactinternalapp|reactexternalapp
+  └─ sf template generate ui-bundle --template reactbasic|default
 
 Develop locally
   ├─ npm install
@@ -120,7 +123,7 @@ Develop locally
 
 Build & deploy
   ├─ npm run build            (→ dist/)
-  └─ sf project deploy start --source-dir <bundle>
+  └─ sf project deploy start --source-dir <bundle> --source-dir applications/
 
 Verify
   └─ App Launcher / Digital Experiences / hard-refresh deep links

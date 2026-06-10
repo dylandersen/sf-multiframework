@@ -1,7 +1,7 @@
 ---
 name: sf-multiframework
 description: >
-  Salesforce Multi-Framework (Beta) skill for building React apps that run on
+  Salesforce Multi-Framework skill for building React apps that run on
   the Agentforce 360 Platform.
   TRIGGER when user creates or edits UI bundles (`uiBundles/`), authors React
   apps deployed via `UIBundle` metadata, configures `ui-bundle.json` /
@@ -10,13 +10,13 @@ description: >
   surfaces backed by Apex REST + Models API, designs three-panel workspace
   shells, scaffolds with `sf template generate ui-bundle`, or asks about
   React vs LWC choice on Salesforce.
-  DO NOT TRIGGER when the work is pure LWC (use sf-lwc), generic Apex
-  (use sf-apex), Builder-managed Agentforce metadata only
-  (use sf-ai-agentforce), or `.agent` script files (use sf-ai-agentscript).
+  DO NOT TRIGGER when the work is pure LWC (use generating-lwc-components),
+  generic Apex (use generating-apex), or Agentforce agent metadata and
+  `.agent` script files (use developing-agentforce).
 license: MIT
-compatibility: "Beta. Requires API v66.0+, Node.js 22+, sandbox or scratch org with default language en_US, and @salesforce/plugin-ui-bundle-dev."
+compatibility: "Summer '26 / API v67.0+. Requires Node.js 22+, sandbox or scratch org with default language en_US, and @salesforce/plugin-ui-bundle-dev."
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "Dylan Andersen"
   scoring: "100 points across 6 categories"
   sources: "Salesforce Developer Documentation + trailheadapps/multiframework-recipes"
@@ -25,13 +25,13 @@ metadata:
 
 # sf-multiframework
 
-Salesforce **Multi-Framework (Beta)** lets you build modern frontend apps — currently **React** — that run on the Agentforce 360 Platform via the `UIBundle` metadata type. This skill is the code-first authoring path: scaffolding a project, wiring Data SDK + GraphQL, integrating the Agentforce Conversation Client, styling, and deploying.
+Salesforce **Multi-Framework** lets you build modern frontend apps — currently **React** — that run on the Agentforce 360 Platform via the `UIBundle` metadata type. This skill is the code-first authoring path: scaffolding a project, wiring Data SDK + GraphQL, integrating the Agentforce Conversation Client, styling, and deploying.
 
 > **Sources.** Built from the official [Salesforce developer documentation](references/official-sources.md) (the `reactdev-*` pages under `developer.salesforce.com/docs/platform/einstein-for-devs` and `code-builder`) and code patterns distilled from [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Format, rubric structure, and cross-skill orchestration conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Written and maintained by Dylan Andersen.
 
 > **Usable in any MCP-capable agent or IDE.** Agentforce Vibes is *one* authoring surface; this skill is designed for developers who work directly against the `sf` CLI and the Data SDK without requiring a specific assistant.
 
-> Status: **Beta**. Sandbox + scratch orgs only. English (`en_US`) default language required. Not yet available in Developer Edition orgs or Trailhead Playgrounds.
+> Status: **Summer '26 / API v67.0+ mechanics**. Sandbox + scratch orgs only. English (`en_US`) default language required. Not yet available in Developer Edition orgs or Trailhead Playgrounds.
 
 > Start here: [references/activation-checklist.md](references/activation-checklist.md)
 > New to the feature? Read [references/overview.md](references/overview.md) then [references/setup.md](references/setup.md).
@@ -44,7 +44,7 @@ Use `sf-multiframework` when the work involves:
 
 - creating or editing files inside `force-app/main/.../uiBundles/<appName>/`
 - authoring `ui-bundle.json` and `.uibundle-meta.xml`
-- scaffolding via `sf template generate ui-bundle` (`reactinternalapp` / `reactexternalapp`)
+- scaffolding via `sf template generate ui-bundle` (`reactbasic` / `default`; older Beta docs may mention `reactinternalapp` / `reactexternalapp`)
 - using `@salesforce/sdk-data` (`createDataSDK`, `gql`, `dataSdk.graphql?.()`, `dataSdk.fetch?.()`)
 - generating GraphQL types via codegen (`schema.graphql`, `graphql-operations-types.ts`)
 - embedding the Agentforce Conversation Client (`@salesforce/agentforce-conversation-client`)
@@ -54,11 +54,11 @@ Use `sf-multiframework` when the work involves:
 
 Delegate elsewhere when:
 
-- task is pure LWC authoring → [sf-lwc](../sf-lwc/SKILL.md)
-- writing/maintaining Apex called from the React app → [sf-apex](../sf-apex/SKILL.md)
-- the Conversation Client target is a Builder-managed Employee Agent and the work is on the agent itself → [sf-ai-agentforce](../sf-ai-agentforce/SKILL.md) or [sf-ai-agentscript](../sf-ai-agentscript/SKILL.md)
-- agent testing → [sf-ai-agentforce-testing](../sf-ai-agentforce-testing/SKILL.md)
-- generic deployment troubleshooting unrelated to UI bundle specifics → [sf-deploy](../sf-deploy/SKILL.md)
+- task is pure LWC authoring → [generating-lwc-components](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-lwc-components) (older `sf-skills`: `sf-lwc`)
+- writing/maintaining Apex called from the React app → [generating-apex](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-apex) (older `sf-skills`: `sf-apex`)
+- the Conversation Client target is a Builder-managed Employee Agent and the work is on the agent itself → [developing-agentforce](https://github.com/forcedotcom/sf-skills/tree/main/skills/developing-agentforce) (older `sf-skills`: `sf-ai-agentforce` / `sf-ai-agentscript`)
+- agent testing → [testing-agentforce](https://github.com/forcedotcom/sf-skills/tree/main/skills/testing-agentforce) (older `sf-skills`: `sf-ai-agentforce-testing`)
+- generic deployment troubleshooting unrelated to UI bundle specifics → [deploying-metadata](https://github.com/forcedotcom/sf-skills/tree/main/skills/deploying-metadata) (older `sf-skills`: `sf-deploy`)
 
 ---
 
@@ -66,9 +66,9 @@ Delegate elsewhere when:
 
 Before authoring or fixing anything, infer or ask:
 
-1. **Org type**: Sandbox or Scratch? (DE / Playgrounds are not supported in Beta.)
-2. **App target**: `AppLauncher` (internal employee app) or `Experience` (external B2B/B2C portal)?
-3. **Template**: `reactinternalapp`, `reactexternalapp`, or no template (manual setup)?
+1. **Org type**: Sandbox or Scratch? (DE / Playgrounds are not supported in the current release.)
+2. **App target**: `CustomApplication` (internal employee app) or `Experience` (external B2B/B2C portal)?
+3. **Template**: `reactbasic`, `default`, or no template (manual setup)? Only use legacy names like `reactinternalapp` if `sf template generate ui-bundle --help` lists them.
 4. **ACC needed?** If yes, is the agent an Employee Agent? Are cookies + Trusted Domains configured?
 5. **Data access pattern**: GraphQL (preferred), UI API REST, or Apex REST?
 6. **Styling system**: SLDS blueprints, `design-system-react`, or Tailwind/shadcn?
@@ -81,22 +81,25 @@ Before authoring or fixing anything, infer or ask:
 
 Verify these before authoring or fixing any Multi-Framework app:
 
-1. **Org has Salesforce Multi-Framework (Beta) enabled** in Setup. (Once enabled, **cannot be disabled**.)
+1. **Org has Salesforce Multi-Framework enabled** in Setup. (Once enabled, **cannot be disabled**.)
 2. **Salesforce CLI is current** and `@salesforce/plugin-ui-bundle-dev` is installed:
    `sf plugins install @salesforce/plugin-ui-bundle-dev`
 3. **Node.js v22+** and **npm** installed.
-4. **App lives under `uiBundles/<appName>/`** with both `ui-bundle.json` and `<appName>.uibundle-meta.xml`.
-5. **`ui-bundle.json` `outputDir` matches the build output** (`dist/` for Vite).
-6. **SPA fallback** is set: `routing.fallback: "index.html"` for client-side routing.
-7. **API version is managed by `sfdx-project.json` and deploy API version**. Current UI bundle validators can reject `apiVersion` inside `ui-bundle.json`.
-8. **`outputDir` build artifacts exist before deploy** — run `npm run build` inside the bundle directory.
-9. **For external apps**: `digitalExperiences/.../sfdc_cms_site/content.json` has `appContainer: true` and `appSpace: "<namespace>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace).
-10. **For ACC**: My Domain "Require first-party use of Salesforce cookies" is **unchecked**, and the host domain is registered under **Trusted Domains for Inline Frames** (Lightning Out type).
-11. **GraphQL schema is generated from a connected org** (`npm run graphql:schema`) before running codegen.
-12. **Use `@salesforce/sdk-data`** for all Salesforce API calls — never `fetch()` or `axios` directly to Salesforce endpoints.
-13. **Optional chaining** on SDK methods: `sdk.graphql?.()`, `sdk.fetch?.()` — they may not exist in every surface.
-14. **Only one UI bundle deploys per metadata push** — keep changes scoped to one app per deploy when possible.
-15. **UIBundle has a 2,500-file ceiling** — keep `dist/` lean.
+4. **`sfdx-project.json` uses `sourceApiVersion: "67.0"` or higher**. The `uiBundle` field on `CustomApplication` does not exist in v66.0.
+5. **App lives under `uiBundles/<appName>/`** with both `ui-bundle.json` and `<appName>.uibundle-meta.xml`.
+6. **Internal apps include a companion `applications/<AppName>.app-meta.xml`** with `<uiBundle><appName></uiBundle>`.
+7. **Internal app access is granted explicitly** by linking a permission set to the CustomApplication's `ApplicationId` via `SetupEntityAccess`.
+8. **`ui-bundle.json` `outputDir` matches the build output** (`dist/` for Vite).
+9. **SPA fallback** is set: `routing.fallback: "index.html"` for client-side routing.
+10. **API version is managed by `sfdx-project.json` and deploy API version**. Current UI bundle validators can reject `apiVersion` inside `ui-bundle.json`.
+11. **`outputDir` build artifacts exist before deploy** — run `npm run build` inside the bundle directory.
+12. **For external apps**: `digitalExperiences/.../sfdc_cms_site/content.json` has `appContainer: true` and `appSpace: "<namespace>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace).
+13. **For ACC**: My Domain "Require first-party use of Salesforce cookies" is **unchecked**, and the host domain is registered under **Trusted Domains for Inline Frames** (Lightning Out type).
+14. **GraphQL schema is generated from a connected org** (`npm run graphql:schema`) before running codegen.
+15. **Use `@salesforce/sdk-data`** for all Salesforce API calls — never `fetch()` or `axios` directly to Salesforce endpoints.
+16. **Optional chaining** on SDK methods: `sdk.graphql?.()`, `sdk.fetch?.()` — they may not exist in every surface.
+17. **Only one UI bundle deploys per metadata push** — keep changes scoped to one app per deploy when possible.
+18. **UIBundle has a 2,500-file ceiling** — keep `dist/` lean.
 
 Expanded version: [references/activation-checklist.md](references/activation-checklist.md)
 
@@ -153,8 +156,10 @@ Without `fallback: "index.html"` a hard refresh on `/dashboard` returns 404.
 
 ### 5) `.uibundle-meta.xml` `target` is binding
 
-- `AppLauncher` → app appears in App Launcher (default).
+- `CustomApplication` → internal app launched from the App Launcher. Requires companion `applications/<AppName>.app-meta.xml` with `<uiBundle><bundleName></uiBundle>`.
 - `Experience` → app is hosted by an Experience Cloud site and is **only** discoverable through that site's metadata. External apps require `digitalExperienceConfigs/`, `digitalExperiences/`, `networks/`, and `sites/` to coexist.
+
+`AppLauncher` was the Beta target name and is now deprecated. Metadata API v67.0 rejects it; use `CustomApplication`.
 
 ### 6) ACC requires explicit org configuration
 
@@ -177,7 +182,7 @@ Inside a React UI bundle these are **not supported**:
 
 If you need those, build an LWC instead.
 
-### 8) Beta limitations
+### 8) Current limitations
 
 - Sandbox and scratch orgs only.
 - Default language must be `en_US`.
@@ -201,7 +206,7 @@ UI bundles can be hosted in sandboxed iframes where `window.localStorage` throws
 ## Recommended Authoring Workflow
 
 ### Phase 1 — Org & environment setup
-- enable **Salesforce Multi-Framework (Beta)** in Setup
+- enable **Salesforce Multi-Framework** in Setup
 - install Node 22+, latest `sf` CLI, Salesforce Extension Pack, `@salesforce/plugin-ui-bundle-dev`
 - for external apps: enable Digital Experiences, create a placeholder site, confirm Customer/Partner Community licenses
 - for ACC: configure My Domain cookies, Trusted Domains for Inline Frames, and Agentforce preference
@@ -211,12 +216,12 @@ UI bundles can be hosted in sandboxed iframes where `window.localStorage` throws
 
 ```bash
 # Inside an existing DX project
-sf template generate ui-bundle --name myApp --template reactinternalapp
-# or for B2B/B2C portals
-sf template generate ui-bundle --name myApp --template reactexternalapp
+sf template generate ui-bundle --name myApp --template reactbasic
+# or start from the minimal template and wire metadata manually
+sf template generate ui-bundle --name myApp --template default
 
-# Or scaffold a brand-new DX project + external app
-sf template generate project --template reactexternalapp
+# Verify available template names against the installed plugin:
+sf template generate ui-bundle --help
 ```
 
 Templates: [references/templates.md](references/templates.md). Project layout: [references/project-structure.md](references/project-structure.md).
@@ -240,6 +245,7 @@ npm run build                         # tsc --noEmit && vite build → dist/
 cd ../../../../..                     # back to project root
 sf project deploy start \
   --source-dir force-app/main/default/uiBundles/myApp \
+  --source-dir force-app/main/default/applications \
   --target-org TARGET_ORG
 ```
 
@@ -248,6 +254,7 @@ Preference: deploy via the **Salesforce DX MCP** (`mcp_Salesforce_DX_deploy_meta
 ### Phase 5 — Verify in org
 
 - Open the org: `sf org open` → App Launcher → your app (internal) or Digital Experiences (external).
+- Internal apps are served from the `.salesforce.app` domain, typically `https://<instance>--c.<pod>.my.salesforce.app/app/c__<AppDeveloperName>`. Launching from App Launcher handles the session bootstrap.
 - Confirm SPA refresh works on a deep route.
 - For ACC: confirm the FAB appears, the panel opens, and Lightning Types render.
 
@@ -368,14 +375,14 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 
 ## Cross-Skill Orchestration
 
-| Task | Delegate to |
-|---|---|
-| Build Apex REST / Apex controllers called by the app | [sf-apex](../sf-apex/SKILL.md) |
-| Author or fix the Employee Agent that ACC connects to | [sf-ai-agentforce](../sf-ai-agentforce/SKILL.md) or [sf-ai-agentscript](../sf-ai-agentscript/SKILL.md) |
-| Test the Employee Agent | [sf-ai-agentforce-testing](../sf-ai-agentforce-testing/SKILL.md) |
-| Permission sets / profiles for the bundle | [sf-permissions](../sf-permissions/SKILL.md) |
-| Deploy at scale / CI | [sf-deploy](../sf-deploy/SKILL.md) |
-| SOQL helpers for Apex backing the app | [sf-soql](../sf-soql/SKILL.md) |
+| Task | Delegate to | Older `sf-skills` alias |
+|---|---|---|
+| Build Apex REST / Apex controllers called by the app | [generating-apex](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-apex) | `sf-apex` |
+| Author or fix the Employee Agent that ACC connects to | [developing-agentforce](https://github.com/forcedotcom/sf-skills/tree/main/skills/developing-agentforce) | `sf-ai-agentforce` / `sf-ai-agentscript` |
+| Test the Employee Agent | [testing-agentforce](https://github.com/forcedotcom/sf-skills/tree/main/skills/testing-agentforce) | `sf-ai-agentforce-testing` |
+| Permission sets / profiles for the bundle | [generating-permission-set](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-permission-set) | `sf-permissions` |
+| Deploy at scale / CI | [deploying-metadata](https://github.com/forcedotcom/sf-skills/tree/main/skills/deploying-metadata) | `sf-deploy` |
+| SOQL helpers for Apex backing the app | [querying-soql](https://github.com/forcedotcom/sf-skills/tree/main/skills/querying-soql) | `sf-soql` |
 
 ---
 
@@ -393,10 +400,14 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 | Mutation succeeds but read-back errors | UI API mutation return shape can't include some fields — switch to Permissive error strategy | [references/error-handling.md](references/error-handling.md) |
 | Build succeeds but deploy fails with file count error | UIBundle 2,500-file limit; prune `dist/` source maps or unused assets | [references/troubleshooting.md](references/troubleshooting.md) |
 | Deploy fails on `apiVersion`, `isEnabled`, or unknown `ui-bundle.json` keys | UIBundle metadata/runtime schema drift; use `isActive` + `version`, omit `apiVersion` from `ui-bundle.json` | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
+| Deploy fails with `Invalid Target value 'AppLauncher'` | stale Beta metadata target | use `<target>CustomApplication</target>` and API v67.0+ |
+| Deploy fails with `Property 'uiBundle' not valid in version 66.0` | `sfdx-project.json` still on v66.0 | set `sourceApiVersion` to `67.0` or higher |
+| Deployed internal app returns HTTP 400 `Could not determine handler` | missing companion `CustomApplication` metadata | add `applications/<AppName>.app-meta.xml` with `<uiBundle><bundleName></uiBundle>` |
+| Internal app exists in `AppMenuItem` with `IsAccessible: false` | app access not granted via `SetupEntityAccess` | link the app `ApplicationId` to a permission set |
 | Deploy includes `vite.config.js`, `.d.ts`, or `*.tsbuildinfo` | `tsc -b` emitted TypeScript artifacts into the bundle root | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
 | `npm install` fails with Vite peer conflict | Salesforce Vite plugin lags the latest Vite major | [references/project-structure.md](references/project-structure.md), [references/troubleshooting.md](references/troubleshooting.md) |
 | `sf template generate ui-bundle` is not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | [references/cli-guide.md](references/cli-guide.md) |
-| Beta toggle missing in Setup | org is DE / Playground (not supported), or default language ≠ `en_US` | [references/setup.md](references/setup.md) |
+| Feature toggle missing in Setup | org is DE / Playground (not supported), or default language ≠ `en_US` | [references/setup.md](references/setup.md) |
 | Navigation works locally, breaks in Lightning Experience | `basename` not derived from `SFDC_ENV.basePath` | [references/react-router.md](references/react-router.md) |
 | Build error: "no exported member BrowserRouter" | importing from `react-router-dom` instead of `react-router` (v7) | [references/react-router.md](references/react-router.md) |
 | Image / font / analytics blocked with CSP console error | missing `CspTrustedSite` metadata | [references/permissions-csp.md](references/permissions-csp.md) |
@@ -480,14 +491,4 @@ Full rubric: [references/scoring-rubric.md](references/scoring-rubric.md)
 
 ## Official Resources
 
-- [Build a React App with Salesforce Multi-Framework (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-overview.html)
-- [Configure Your Org for React Development (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-setup.html)
-- [Integrate Your React App with the Agentforce 360 Platform (Beta)](https://developer.salesforce.com/docs/platform/code-builder/guide/reactdev-integrate.html)
-- [Develop a React App Manually (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-develop.html)
-- [Data SDK and GraphQL (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-data-sdk.html)
-- [Access Record Data with Data SDK (Beta)](https://developer.salesforce.com/docs/platform/code-builder/guide/reactdev-data-sdk-usage.html)
-- [Error Handling in Data SDK (Beta)](https://developer.salesforce.com/docs/platform/code-builder/guide/reactdev-data-sdk-graphql-error.html)
-- [Style Your React Apps (Beta)](https://developer.salesforce.com/docs/platform/code-builder/guide/reactdev-styling.html)
-- [Integrate Agentforce Conversation Client (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-acc.html)
-- [React vs LWC (Beta)](https://developer.salesforce.com/docs/platform/code-builder/guide/reactdev-lwc-diff.html)
-- [Multi-Framework Recipes (GitHub)](https://github.com/trailheadapps/multiframework-recipes)
+See [references/official-sources.md](references/official-sources.md) for Salesforce docs and reference implementations.

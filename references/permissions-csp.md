@@ -16,10 +16,10 @@ At minimum your end users need:
 | Object-level read/edit on data the app queries | every user | GraphQL queries enforce org FLS/CRUD |
 | Field-level read/edit for every field in GraphQL queries | every user | Missing FLS returns `null` in UI API, not an error |
 | `ViewSetup` (if app deep-links into Setup) | admins only | Rare |
-| System permission to view the bundle itself (if restricted) | every user | Default is usually public within the org |
+| `SetupEntityAccess` grant for the CustomApplication | every internal app user | Without it `AppMenuItem.IsAccessible` can stay `false`, even for admins |
 | For **ACC**: `Agentforce` permission + the agent's `<agentAccesses>` | every user using chat | Without `<agentAccesses>` in a permission set, the agent is invisible |
 
-See [`sf-permissions`](../../sf-permissions/SKILL.md) for permission-set design, `<agentAccesses>` grants, and audit patterns.
+See [`generating-permission-set`](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-permission-set) for permission-set design, `<agentAccesses>` grants, and audit patterns.
 
 ### Starter permission set (`force-app/main/default/permissionsets/myApp.permissionset-meta.xml`)
 
@@ -43,13 +43,10 @@ See [`sf-permissions`](../../sf-permissions/SKILL.md) for permission-set design,
         <editable>true</editable>
     </fieldPermissions>
 
-    <!-- If the app has its own tab entry in App Launcher -->
-    <tabSettings>
-        <tab>MyReactApp</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
 </PermissionSet>
 ```
+
+After deploying the permission set and the `CustomApplication`, link the permission set to the app with `SetupEntityAccess`.
 
 ### Assign at scratch-org setup
 
@@ -58,6 +55,33 @@ sf org create scratch --definition-file config/project-scratch-def.json --alias 
 sf project deploy start --source-dir force-app
 sf org assign permset --name myApp
 ```
+
+### Grant CustomApplication access
+
+Permission set XML grants object and field access, but the App Launcher entry can still be inaccessible until a `SetupEntityAccess` row links the permission set to the app's `ApplicationId`.
+
+```apex
+Id permSetId = [
+    SELECT Id
+    FROM PermissionSet
+    WHERE Name = 'myApp'
+    LIMIT 1
+].Id;
+
+Id appId = [
+    SELECT ApplicationId
+    FROM AppMenuItem
+    WHERE Name = 'MyApp'
+    LIMIT 1
+].ApplicationId;
+
+insert new SetupEntityAccess(
+    ParentId = permSetId,
+    SetupEntityId = appId
+);
+```
+
+Run it with anonymous Apex after deploy, or use an equivalent setup automation. If the app registers in `AppMenuItem` with `IsAccessible = false`, this grant is the first thing to check.
 
 ### Silent FLS failures
 
@@ -163,18 +187,17 @@ The Agentforce Conversation Client loads Lightning Out into an iframe. For local
 
 For ACC, **#1 is the one that matters** because the React app is embedding a Salesforce iframe, not the other way around. Full detail in [acc-integration.md](acc-integration.md). Only add a `frame-src` trusted site if the React app embeds a *third-party* iframe (embedded auth, third-party video, etc.).
 
-## `tabSettings` — making the app launch from App Launcher
+## CustomApplication access — making the app launch from App Launcher
 
-When the UIBundle target is `AppLauncher`, the platform auto-creates a tab. End users must have it visible in their permission set:
+When the UIBundle target is `CustomApplication`, the platform registers an App Launcher entry through `applications/<AppName>.app-meta.xml`. End users must have app access through `SetupEntityAccess`; legacy `tabSettings` are not enough for the v67 internal-app path.
 
-```xml
-<tabSettings>
-    <tab>MyReactApp</tab>          <!-- matches UIBundle developer name -->
-    <visibility>Visible</visibility>
-</tabSettings>
+```soql
+SELECT Name, ApplicationId, IsAccessible
+FROM AppMenuItem
+WHERE Name = 'MyApp'
 ```
 
-Without this, the bundle deploys and the tab exists in metadata, but users don't see it in App Launcher.
+If `IsAccessible` is `false`, insert the `SetupEntityAccess` row shown above for the user's permission set.
 
 ## Diagnosing CSP blocks
 
@@ -202,7 +225,9 @@ Add a matching `CspTrustedSite`, redeploy, hard-refresh. CSP is cached — somet
 
 | Task | Skill |
 |---|---|
-| Permission-set design / audit / hierarchy | [sf-permissions](../../sf-permissions/SKILL.md) |
-| Named Credentials for third-party APIs | [sf-integration](../../sf-integration/SKILL.md) |
-| Apex REST endpoints for server-side calls | [sf-apex](../../sf-apex/SKILL.md) |
+| Permission-set design / audit / hierarchy | [generating-permission-set](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-permission-set) |
+| Named Credentials for third-party APIs | [building-sf-integrations](https://github.com/forcedotcom/sf-skills/tree/main/skills/building-sf-integrations) |
+| Apex REST endpoints for server-side calls | [generating-apex](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-apex) |
 | ACC iframe + cookie configuration | [acc-integration.md](acc-integration.md) |
+
+> On the original `sf-skills` release these are named `sf-permissions`, `sf-integration`, and `sf-apex` — see [CREDITS.md](../CREDITS.md) for the full old→new mapping.

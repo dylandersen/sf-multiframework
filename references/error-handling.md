@@ -81,7 +81,7 @@ Network failures, aborted requests, CSRF mismatches. The `fetch` promise rejects
 
 ```ts
 try {
-  const res = await sdk.fetch?.("/services/data/v66.0/ui-api/records/...", {
+  const res = await sdk.fetch?.("/services/data/v67.0/ui-api/records/...", {
     method: "GET"
   });
   if (!res) throw new Error("fetch surface unavailable");

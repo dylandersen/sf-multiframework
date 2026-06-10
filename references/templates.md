@@ -1,11 +1,11 @@
-# Templates: `reactinternalapp` vs `reactexternalapp`
+# Templates: `reactbasic` vs `default`
 
-The `sf template generate ui-bundle` command supports two React templates that pre-wire common patterns. Choose based on your **audience and authentication model**.
+The `sf template generate ui-bundle` command currently exposes `reactbasic` and `default` in the Summer '26 plugin line. Older Beta docs and examples may mention `reactinternalapp` / `reactexternalapp`; only use those names if `sf template generate ui-bundle --help` lists them in the installed plugin.
 
-## `reactinternalapp` — internal employee apps
+## `reactbasic` — React app starter
 
 **Audience:** employees signing in with Salesforce credentials.
-**Target:** `AppLauncher`.
+**Target:** `CustomApplication` for internal apps, or `Experience` if you add Experience Cloud metadata.
 **Includes:**
 
 - Pre-wired Vite + TypeScript + Tailwind + shadcn/ui shell
@@ -19,31 +19,44 @@ When to pick it:
 - You plan to embed an Employee Agent.
 
 ```bash
-sf template generate ui-bundle --name myEmployeeApp --template reactinternalapp
+sf template generate ui-bundle --name myEmployeeApp --template reactbasic
 ```
 
-## `reactexternalapp` — external B2B / B2C portals
+For an internal App Launcher app, add the companion CustomApplication metadata:
+
+```xml
+<!-- force-app/main/default/applications/MyEmployeeApp.app-meta.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>My Employee App</label>
+    <uiType>Lightning</uiType>
+    <uiBundle>myEmployeeApp</uiBundle>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <navType>Standard</navType>
+</CustomApplication>
+```
+
+## `default` — minimal bundle starter
+
+Use `default` when you want the smallest generated bundle and plan to wire your own routing, dependencies, Data SDK calls, and companion metadata:
+
+```bash
+sf template generate ui-bundle --name myApp --template default
+```
+
+## External B2B / B2C portals
 
 **Audience:** customers or partners signing in from outside the org.
 **Target:** `Experience`.
-**Includes:**
 
-- Everything `reactinternalapp` provides, **plus**:
-- A pre-wired **Experience Cloud site** with multiple pages
-- Authentication entry points
-- Object search
-
-To use this template you also need:
+External apps still need the Experience Cloud metadata stack, even when the initial React bundle came from `reactbasic` or `default`:
 
 - Digital Experiences enabled in the org
 - Customer/Partner Community user licenses
-
-```bash
-sf template generate ui-bundle --name myPortal --template reactexternalapp
-
-# Or scaffold a brand-new DX project + external app:
-sf template generate project --template reactexternalapp
-```
+- A pre-wired Experience Cloud site with the app-container metadata below
 
 ### Required companion metadata for external apps
 
@@ -80,10 +93,10 @@ force-app/main/default/
 
 ## Picking the right target after the fact
 
-Switching `<target>` from `AppLauncher` to `Experience` (or vice versa) is **not a hot swap**. You'll need:
+Switching `<target>` from `CustomApplication` to `Experience` (or vice versa) is **not a hot swap**. You'll need:
 
 - Going internal → external: add the four metadata folders above and a real Experience Cloud site, then redeploy.
-- Going external → internal: remove the dependent site metadata or it will reference a non-existent app target.
+- Going external → internal: remove the dependent site metadata, add `applications/<AppName>.app-meta.xml`, and grant app access via `SetupEntityAccess`.
 
 Plan the target up front whenever possible.
 
@@ -121,4 +134,4 @@ Minimum `package.json` scripts:
 }
 ```
 
-Add a starter `ui-bundle.json` (see [project-structure.md](project-structure.md)) and `<app>.uibundle-meta.xml`, and you have a deployable bundle.
+Add a starter `ui-bundle.json` (see [project-structure.md](project-structure.md)), `<app>.uibundle-meta.xml`, and the correct companion metadata (`applications/` for internal apps, Experience Cloud folders for external apps).

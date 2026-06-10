@@ -6,11 +6,13 @@ A Multi-Framework app is a **self-contained unit** under `force-app/main/default
 
 ```
 multiframework-recipes/
-  sfdx-project.json                 # Salesforce DX config (apiVersion v66.0)
+  sfdx-project.json                 # Salesforce DX config (apiVersion v67.0+)
   package.json                      # ROOT — SFDX metadata scripts only, NOT the React app
   data/                             # sf data import tree plans
   config/project-scratch-def.json   # MUST set "language": "en_US"
   force-app/main/default/
+    applications/
+      MyApp.app-meta.xml            # CustomApplication that routes App Launcher to the bundle
     uiBundles/
       myApp/                        # ← the entire React app + metadata
         myApp.uibundle-meta.xml     # UIBundle metadata definition
@@ -57,7 +59,7 @@ multiframework-recipes/
 <UIBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <isActive>true</isActive>
     <masterLabel>My App</masterLabel>
-    <target>AppLauncher</target>
+    <target>CustomApplication</target>
     <version>1.0.0</version>
 </UIBundle>
 ```
@@ -66,10 +68,44 @@ multiframework-recipes/
 |---|---|
 | `isActive` | Set `true` to make the app available |
 | `masterLabel` | User-facing label |
-| `target` | `AppLauncher` (default) or `Experience` |
+| `target` | `CustomApplication` (internal App Launcher app) or `Experience` |
 | `version` | App version string |
 
-> External apps must use `<target>Experience</target>` and ship matching `digitalExperiences/`, `networks/`, and `sites/` metadata. See [templates.md](templates.md).
+> `AppLauncher` was the Beta-era target name. Metadata API v67.0 rejects it; use `CustomApplication` for internal apps.
+
+Internal apps also require companion `CustomApplication` metadata. The wiring is:
+
+```text
+uiBundles/myApp/myApp.uibundle-meta.xml
+  <target>CustomApplication</target>
+
+applications/MyApp.app-meta.xml
+  <uiBundle>myApp</uiBundle>
+```
+
+### `applications/<AppName>.app-meta.xml` for internal apps
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>My App</label>
+    <uiType>Lightning</uiType>
+    <uiBundle>myApp</uiBundle>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <navType>Standard</navType>
+</CustomApplication>
+```
+
+| Element | Notes |
+|---|---|
+| `uiBundle` | Must match the UIBundle developer name / folder name |
+| `formFactors` | Use `Large` for desktop Lightning Experience |
+| `uiType` | Use `Lightning` |
+
+Deploying only the `UIBundle` can create runtime HTTP 400 errors because no route is registered for the app. Deploy the bundle and its `CustomApplication` together. External apps must use `<target>Experience</target>` and ship matching `digitalExperiences/`, `networks/`, and `sites/` metadata. See [templates.md](templates.md).
 
 ### `ui-bundle.json`
 

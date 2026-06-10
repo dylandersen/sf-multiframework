@@ -261,7 +261,7 @@ is hosted in:
 Do NOT use full origin URLs (`https://yourorg.lightning.force.com/lightning/r/...`)
 because:
 
-- In an **internal AppLauncher app**, the React app already lives inside the
+- In an **internal CustomApplication app launched from App Launcher**, the React app already lives inside the
   Lightning frame; relative paths route correctly without a top-frame jump.
 - In an **Experience Cloud app**, the absolute path is rewritten by the
   Salesforce frame; a hard-coded production origin breaks sandbox/scratch.
@@ -485,8 +485,10 @@ welds the React app to the Apex internals and breaks every backend change.
 
 | Task | Delegate to |
 |---|---|
-| Build the Apex REST resource + reasoning loop | [sf-apex](../../sf-apex/SKILL.md) |
-| Wire up Agentforce Models API or Prompt Templates | [sf-ai-agentforce](../../sf-ai-agentforce/SKILL.md) |
+| Build the Apex REST resource + reasoning loop | [generating-apex](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-apex) |
+| Wire up Agentforce Models API or Prompt Templates | [developing-agentforce](https://github.com/forcedotcom/sf-skills/tree/main/skills/developing-agentforce) |
 | Use Agentforce Conversation Client (pre-built chat widget) | [acc-integration.md](acc-integration.md) |
-| SOQL helpers for the reasoning engine | [sf-soql](../../sf-soql/SKILL.md) |
-| Auditing / logging the model invocations | [sf-apex](../../sf-apex/SKILL.md) |
+| SOQL helpers for the reasoning engine | [querying-soql](https://github.com/forcedotcom/sf-skills/tree/main/skills/querying-soql) |
+| Auditing / logging the model invocations | [generating-apex](https://github.com/forcedotcom/sf-skills/tree/main/skills/generating-apex) |
+
+> On the original `sf-skills` release these are named `sf-apex`, `sf-ai-agentforce`/`sf-ai-agentscript`, and `sf-soql` — see [CREDITS.md](../CREDITS.md) for the full old→new mapping.

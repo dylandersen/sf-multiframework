@@ -4,7 +4,7 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 
 ## Org & Environment
 
-- [ ] Org is a supported edition — **DE, Sandbox, Production, or Scratch** (all editions supported as of Soft GA, June 3 2026)
+- [ ] Org is a supported edition — **DE, Sandbox, Production, or Scratch** (all editions supported since June 3, 2026)
 - [ ] Org default language is **`en_US`** (scratch org def explicitly sets `"language": "en_US"`)
 - [ ] **Salesforce Multi-Framework** enabled in Setup → cannot be disabled later
 - [ ] User has **Customize Application** permission to enable the feature

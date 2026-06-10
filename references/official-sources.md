@@ -4,7 +4,7 @@ The authoritative documentation and reference implementations this skill is dist
 
 ## Salesforce Developer Documentation
 
-> Note: Multi-Framework reached Soft GA on June 3, 2026. Some linked pages below may still be titled "(Beta)" until the docs are refreshed — the link text mirrors the current page titles.
+> Note: Multi-Framework became generally available on June 3, 2026. Some linked pages below may still be titled "(Beta)" until the docs are refreshed — the link text mirrors the current page titles.
 
 ### Overview & Setup
 - [Build a React App with Salesforce Multi-Framework (Beta)](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/reactdev-overview.html)

@@ -6,7 +6,7 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 
 | Symptom | Likely cause | First check |
 |---|---|---|
-| Feature toggle missing in Setup | Org default language ≠ `en_US`, or org not yet on the Soft GA release | Confirm `en_US`; the feature is available in DE, Sandbox, and Production |
+| Feature toggle missing in Setup | Org default language ≠ `en_US`, or the release hasn't reached the org yet | Confirm `en_US`; the feature is available in DE, Sandbox, and Production |
 | Feature toggle visible but greyed out | User missing **Customize Application** | Assign System Administrator profile or equivalent permission |
 | App loads in English only / blank screens elsewhere | Org default language ≠ `en_US` | Scratch: set `"language": "en_US"`. Sandbox: change org language |
 | `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |

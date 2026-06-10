@@ -34,7 +34,7 @@ or the Salesforce mobile app as a reusable component?
 | **Embedding inside another framework** | Native | Hosted alone (cross-framework via Micro-Frontends Developer Preview) |
 | **Languages** | Standard JS/TS, HTML templates | TypeScript / JSX |
 | **Dark mode / theming** | Built-in via SLDS 2 tokens | DIY via Tailwind tokens or SLDS 2 |
-| **Org enablement** | GA, no toggle | Soft GA — feature toggle in all editions (DE, Sandbox, Production); **cannot be disabled** once enabled |
+| **Org enablement** | GA, no toggle | GA — feature toggle in all editions (DE, Sandbox, Production); **cannot be disabled** once enabled |
 
 ## Pick LWC when…
 
@@ -81,7 +81,7 @@ Not in the supported way. The opposite direction (LWCI inside React) is the supp
 No. Salesforce positions LWC as the primary framework for platform-integrated components and React (and future frameworks) for **self-contained SPAs and custom experiences**.
 
 ### "Is it production-ready?"
-Soft (Accelerated) GA since June 3, 2026 — supported in Production as well as DE and Sandbox. Still English-only and can't be disabled once enabled. Full GA (incl. Agentforce Vibes 2.0) is upcoming.
+Generally available since June 3, 2026 — supported in Production as well as DE and Sandbox. Still English-only and can't be disabled once enabled. More capabilities (incl. Agentforce Vibes 2.0) are on the way.
 
 ## Migration thinking
 

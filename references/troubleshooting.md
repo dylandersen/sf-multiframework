@@ -8,6 +8,7 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 |---|---|---|
 | Feature toggle missing in Setup | Org default language ≠ `en_US`, or the release hasn't reached the org yet | Confirm `en_US`; the feature is available in DE, Sandbox, and Production |
 | Feature toggle visible but greyed out | User missing **Customize Application** | Assign System Administrator profile or equivalent permission |
+| Deploy fails: `UIBundle Metadata API is not enabled because the … feature gate is disabled` (or `The specified field isn't valid: uiBundle`) | Org's Multi-Framework toggle is off | Enable **Salesforce Multi-Framework** in Setup (one-way); see [setup.md](setup.md) |
 | App loads in English only / blank screens elsewhere | Org default language ≠ `en_US` | Scratch: set `"language": "en_US"`. Sandbox: change org language |
 | `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
 | `npm install` fails with Vite peer conflict | Salesforce Vite plugin and latest `@vitejs/plugin-react` target different Vite majors | Pin compatible majors, e.g. Vite 7 + `@vitejs/plugin-react` 5 |
@@ -20,8 +21,10 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 | Deploy fails with file-count error | UIBundle exceeded 2,500 files | Disable source maps in production; prune `dist/` |
 | Deploy fails: `Invalid Target value 'AppLauncher'` | Stale Beta target name | Use `<target>CustomApplication</target>` for internal apps |
 | Deploy fails: `Property 'uiBundle' not valid in version 66.0` | Project deploys with API v66.0 | Set `sourceApiVersion` to `67.0` or higher |
-| Deploy succeeds but app missing from App Launcher | Missing `SetupEntityAccess`, `<isActive>false</isActive>`, or wrong `<target>` | Query `AppMenuItem.IsAccessible`; grant app access; confirm target is `CustomApplication` |
+| Deploy succeeds but app missing from App Launcher | Missing app visibility (a new `CustomApplication` is hidden by default, even for admins), `<isActive>false</isActive>`, or wrong `<target>` | Add `applicationVisibilities` to a profile or grant via permission set; query `AppMenuItem.IsAccessible`; confirm target is `CustomApplication` |
 | App loads HTTP 400: `Could not determine handler` | UIBundle deployed without companion `CustomApplication` metadata | Add `applications/<AppName>.app-meta.xml` with `<uiBundle><bundleName></uiBundle>` and redeploy |
+| App shell renders but every data call fails with `INVALID_SESSION_ID` / "session expired" | App opened via the Beta `/lwr/application/ai/c-<bundle>` URL, which no longer carries a session post-GA | Launch from the App Launcher or the `.salesforce.app` URL (see below) |
+| Apex REST call returns `Could not find a match for URL` | Backend `@RestResource` (plus its Apex dependency tree and custom objects) not deployed in this org | Deploy the Apex backend too, not just the bundle — common when moving to a fresh org |
 | Deploy fails: `ui-bundle.json contains unknown property: 'apiVersion'` | Current validator only allows `outputDir`, `routing`, `headers` | Remove `apiVersion` from `ui-bundle.json`; rely on `sfdx-project.json` / deploy API version |
 | Deploy fails: `apiVersion invalid at this location in type UIBundle` | `.uibundle-meta.xml` includes unsupported `<apiVersion>` | Remove `<apiVersion>` from `.uibundle-meta.xml` |
 | Deploy fails: `isEnabled invalid at this location in type UIBundle` | Metadata uses LWC-style or stale field name | Use `<isActive>true</isActive>` and include `<version>` |
@@ -39,7 +42,7 @@ Internal `CustomApplication` UI bundles are served from the `.salesforce.app` do
 https://<instance>--c.<pod>.my.salesforce.app/app/c__<AppDeveloperName>
 ```
 
-Direct navigation to raw `/lwr/application/...` paths on the Lightning domain can return HTTP 400 even when the bundle deployed correctly.
+Direct navigation to raw `/lwr/application/...` paths on the Lightning domain can return HTTP 400 even when the bundle deployed correctly. The old Beta access path `/lwr/application/ai/c-<bundle>` is especially deceptive post-GA: the shell renders but no session is attached, so every Data SDK / Apex REST call fails with `INVALID_SESSION_ID`. Always launch from the App Launcher.
 
 ## Data SDK / GraphQL
 

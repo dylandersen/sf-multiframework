@@ -35,6 +35,7 @@ Salesforce **Multi-Framework** lets you build modern frontend apps — currently
 
 > Start here: [references/activation-checklist.md](references/activation-checklist.md)
 > New to the feature? Read [references/overview.md](references/overview.md) then [references/setup.md](references/setup.md).
+> Migrating a Beta-era app to GA? See [references/beta-to-ga-migration.md](references/beta-to-ga-migration.md).
 
 ---
 
@@ -88,7 +89,7 @@ Verify these before authoring or fixing any Multi-Framework app:
 4. **`sfdx-project.json` uses `sourceApiVersion: "67.0"` or higher**. The `uiBundle` field on `CustomApplication` does not exist in v66.0.
 5. **App lives under `uiBundles/<appName>/`** with both `ui-bundle.json` and `<appName>.uibundle-meta.xml`.
 6. **Internal apps include a companion `applications/<AppName>.app-meta.xml`** with `<uiBundle><appName></uiBundle>`.
-7. **Internal app access is granted explicitly** by linking a permission set to the CustomApplication's `ApplicationId` via `SetupEntityAccess`.
+7. **Internal app access is granted explicitly** — a brand-new `CustomApplication` is invisible in the App Launcher by default, even for System Administrator. Add `applicationVisibilities` to a profile, or link a permission set to the app's `ApplicationId` via `SetupEntityAccess`.
 8. **`ui-bundle.json` `outputDir` matches the build output** (`dist/` for Vite).
 9. **SPA fallback** is set: `routing.fallback: "index.html"` for client-side routing.
 10. **API version is managed by `sfdx-project.json` and deploy API version**. Current UI bundle validators can reject `apiVersion` inside `ui-bundle.json`.
@@ -403,8 +404,11 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 | Deploy fails on `apiVersion`, `isEnabled`, or unknown `ui-bundle.json` keys | UIBundle metadata/runtime schema drift; use `isActive` + `version`, omit `apiVersion` from `ui-bundle.json` | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
 | Deploy fails with `Invalid Target value 'AppLauncher'` | stale Beta metadata target | use `<target>CustomApplication</target>` and API v67.0+ |
 | Deploy fails with `Property 'uiBundle' not valid in version 66.0` | `sfdx-project.json` still on v66.0 | set `sourceApiVersion` to `67.0` or higher |
+| Deploy fails: `UIBundle Metadata API is not enabled because the … feature gate is disabled` (or `The specified field isn't valid: uiBundle`) | org's Multi-Framework toggle is off | enable **Salesforce Multi-Framework** in Setup (one-way) · [references/setup.md](references/setup.md) |
 | Deployed internal app returns HTTP 400 `Could not determine handler` | missing companion `CustomApplication` metadata | add `applications/<AppName>.app-meta.xml` with `<uiBundle><bundleName></uiBundle>` |
-| Internal app exists in `AppMenuItem` with `IsAccessible: false` | app access not granted via `SetupEntityAccess` | link the app `ApplicationId` to a permission set |
+| App shell renders but every data call fails with `INVALID_SESSION_ID` / "session expired" | app opened via the Beta `/lwr/application/ai/c-<bundle>` URL | launch from App Launcher / the `.salesforce.app` URL · [references/beta-to-ga-migration.md](references/beta-to-ga-migration.md) |
+| Apex REST call returns `Could not find a match for URL` | backend `@RestResource` (and its dependency tree + custom objects) not deployed in this org | deploy the Apex backend, not just the bundle · [references/beta-to-ga-migration.md](references/beta-to-ga-migration.md) |
+| Internal app exists in `AppMenuItem` with `IsAccessible: false` | app access not granted | add `applicationVisibilities` to a profile, or link the app `ApplicationId` to a permission set |
 | Deploy includes `vite.config.js`, `.d.ts`, or `*.tsbuildinfo` | `tsc -b` emitted TypeScript artifacts into the bundle root | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
 | `npm install` fails with Vite peer conflict | Salesforce Vite plugin lags the latest Vite major | [references/project-structure.md](references/project-structure.md), [references/troubleshooting.md](references/troubleshooting.md) |
 | `sf template generate ui-bundle` is not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | [references/cli-guide.md](references/cli-guide.md) |
@@ -441,6 +445,7 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 - [references/project-structure.md](references/project-structure.md)
 - [references/templates.md](references/templates.md)
 - [references/cli-guide.md](references/cli-guide.md)
+- [references/beta-to-ga-migration.md](references/beta-to-ga-migration.md)
 
 ### Data access
 - [references/data-sdk.md](references/data-sdk.md)

@@ -31,8 +31,9 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 - [ ] `force-app/main/default/applications/<AppName>.app-meta.xml` exists
 - [ ] The `CustomApplication` metadata has `<uiBundle><appName></uiBundle>`
 - [ ] Bundle and `applications/` metadata deploy together
-- [ ] The test user's permission set is linked to the app via `SetupEntityAccess`
-- [ ] App is launched from App Launcher or the `.salesforce.app` URL pattern, not a raw `/lwr/application/...` Lightning URL
+- [ ] App visibility is granted — a new `CustomApplication` is hidden by default (even for admins). Add `applicationVisibilities` to the test user's profile, or link a permission set via `SetupEntityAccess`
+- [ ] App is launched from App Launcher or the `.salesforce.app` URL pattern, not a raw `/lwr/application/...` Lightning URL (the Beta `/lwr/application/ai/c-<bundle>` path renders but has no session)
+- [ ] If this is a fresh org, the Apex backend (`@RestResource` + dependencies + custom objects) is deployed too — not just the bundle
 
 ## External Apps Only (`target: Experience`)
 

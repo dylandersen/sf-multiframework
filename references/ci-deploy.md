@@ -86,7 +86,9 @@ package.xml
 
 ## Scratch org definition for Multi-Framework
 
-The scratch definition needs **`UIBundleSettings.webAppOptIn: true`** and `en_US`:
+> **GA change:** the Beta-era `UiBundleSettings` / `webAppOptIn` scratch opt-in is **deprecated and no longer needed**. On the **Summer '26 release or later**, Multi-Framework is enabled on scratch (and all other) orgs with no opt-in. Remove any `UIBundleSettings` block from existing scratch defs.
+
+The scratch definition just needs the org release to be Summer '26+ and `language: en_US`:
 
 ```json
 {
@@ -98,9 +100,6 @@ The scratch definition needs **`UIBundleSettings.webAppOptIn: true`** and `en_US
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
-    "UIBundleSettings": {
-      "webAppOptIn": true
-    },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
     }
@@ -108,7 +107,7 @@ The scratch definition needs **`UIBundleSettings.webAppOptIn: true`** and `en_US
 }
 ```
 
-Without `webAppOptIn`, the scratch org won't have Multi-Framework enabled and metadata deploys fail with feature-not-enabled errors.
+If a scratch deploy still fails with a feature-not-enabled error, the org's release version predates Summer '26 — pin `release: "Previous"`/`"Preview"` appropriately or use a newer instance, rather than adding the deprecated opt-in.
 
 ### `sfdx-project.json`
 
@@ -279,7 +278,7 @@ The reference repo uses Husky + lint-staged:
 | Deploy succeeds but app never appears | Missing `SetupEntityAccess`, wrong `target` in `.uibundle-meta.xml`, or Experience site missing `appContainer: true` | Confirm `CustomApplication` vs `Experience`, grant app access, and check `digitalExperiences/.../content.json` |
 | HTTP 400 `Could not determine handler` | Internal bundle deployed without `applications/<AppName>.app-meta.xml` | Deploy the companion CustomApplication metadata with `<uiBundle>` |
 | `sf template generate ui-bundle` not recognized | Plugin missing | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
-| `UIBundleSettings` feature not enabled on scratch org | `webAppOptIn` not set | Add `"UIBundleSettings": { "webAppOptIn": true }` to scratch def |
+| Scratch deploy fails with feature-not-enabled | org release predates Summer '26 (the old `UiBundleSettings`/`webAppOptIn` opt-in is deprecated at GA) | Use a Summer '26+ instance/release; do **not** re-add the deprecated opt-in |
 | Second deploy reports conflicts on the bundle just created | Source tracking sees the org-created bundle as remote changes | If the remote state is your previous deploy, rerun the targeted bundle deploy with `--ignore-conflicts` |
 
 ## Multi-bundle repos

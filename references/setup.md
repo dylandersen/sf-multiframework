@@ -1,6 +1,6 @@
 # Configure Your Org for React Development
 
-> Current availability: **all org editions — Developer Edition, Sandbox, and Production** (generally available June 3, 2026); scratch orgs supported for development. Default language must be `en_US`.
+> Current availability: **all org editions — Developer Edition, Sandbox, and Production** (generally available July 16, 2026) on the **Summer '26 release or later**, no opt-in required; scratch orgs supported for development. Default language must be `en_US`.
 
 ## 1. Pre-flight
 
@@ -16,6 +16,8 @@
 1. Setup → search **"Salesforce Multi-Framework"** → click **React Development with Salesforce Multi-Framework**.
 2. Click **Enable** → confirm.
 3. **Cannot be disabled** afterwards. Treat the toggle as one-way.
+
+> **Confirm support.** On the Summer '26 release or later, enabled orgs show an **"About Salesforce Multi-Framework"** message on that Setup page with the **"Enable Salesforce App Domain"** toggle on — this is how employee-facing apps get their own `salesforce.app` origin.
 
 ## 3. Authorize the org
 

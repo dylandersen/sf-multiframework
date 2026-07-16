@@ -22,7 +22,7 @@ Reference React + GraphQL code patterns.
 | File | Demonstrates |
 |---|---|
 | `SingleRecord.tsx` | Recipe-style inline `gql` + `{ value }` UIAPI shape + Loading / Error / Loaded states |
-| `graphqlClient.ts` | Production-style Strict / Tolerant / Permissive wrappers around `sdk.graphql?.()` |
+| `graphqlClient.ts` | Production-style Strict / Tolerant / Permissive wrappers around `sdk.graphql?.query()` / `.mutate()` |
 | `listAccountsQuery.graphql` | External-file pattern with variables + connection pagination |
 | `AccChatPanel.tsx` | Minimal Agentforce Conversation Client mount with `useRef` + cleanup |
 | `global.css` | Tailwind / shadcn design-token entry point with Salesforce-blue focus ring + dark mode |

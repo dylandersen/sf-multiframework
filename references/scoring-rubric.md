@@ -40,8 +40,8 @@ Total: **100 points** across 6 categories. Use this to grade an app or PR.
 
 | Item | Points | What earns full credit |
 |---|---|---|
-| Uses `@salesforce/sdk-data` exclusively for Salesforce calls | 5 | No raw `fetch` / `axios` to Salesforce endpoints |
-| Optional chaining on SDK methods | 2 | `sdk.graphql?.()`, `sdk.fetch?.()` |
+| Uses the Data SDK (`@salesforce/platform-sdk/data`) exclusively for Salesforce calls | 5 | No raw `fetch` / `axios` to Salesforce; reads via `.query()`, writes via `.mutate()`; reactive `subscribe`/`refresh` and `cacheControl` used where they help |
+| Optional chaining on SDK methods + `result.data` | 2 | `sdk.graphql?.query()` / `.mutate()`, `sdk.fetch?.()`, `result?.data?.uiapi` |
 | GraphQL preferred over REST where possible | 3 | UI API GraphQL for record reads/writes |
 | `{ value }` field shape respected | 3 | Fields read as `record.X.value` |
 | `edges/node` connection pattern handled | 2 | `result.uiapi.query.X.edges?.map(e => e?.node)` |

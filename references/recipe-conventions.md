@@ -62,7 +62,7 @@ Exception: a later recipe in a category may reference a pattern taught earlier (
 
 // 1. Imports
 import { useEffect, useState } from "react";
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk/data";
 
 // 2. GraphQL query (inline, not imported)
 const QUERY = gql`
@@ -99,7 +99,7 @@ export default function SingleRecord() {
     (async () => {
       try {
         const sdk = await createDataSDK();
-        const res = await sdk.graphql?.(QUERY);
+        const res = await sdk.graphql?.query({ query: QUERY });
         const node = res?.data?.uiapi?.query?.Account?.edges?.[0]?.node;
         if (node) {
           setAccount({

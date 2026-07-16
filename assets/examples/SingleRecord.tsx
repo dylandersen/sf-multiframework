@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk/data";
 
 const QUERY = gql`
   query SingleAccount {
@@ -42,8 +42,9 @@ export default function SingleRecord() {
     (async () => {
       try {
         const sdk = await createDataSDK();
-        const res = await sdk.graphql?.(QUERY);
+        const res = await sdk.graphql?.query({ query: QUERY });
         // UI API wraps every field in { value } — this is Salesforce-specific.
+        // result.data is possibly undefined as of GA — optional-chain through it.
         const node = res?.data?.uiapi?.query?.Account?.edges?.[0]?.node;
         if (node) {
           setAccount({

@@ -42,8 +42,8 @@ The `<target>` element in `.uibundle-meta.xml` accepts:
 
 | Target | Effect | Use case |
 |---|---|---|
-| `CustomApplication` | App appears in the App Launcher for authenticated users | Internal employee apps (B2E) |
-| `Experience` | App is served by an Experience Cloud site | External B2B / B2C portals |
+| `CustomApplication` | App appears in the App Launcher for authenticated users; served from the dedicated `salesforce.app` domain (its own origin, isolated by Same Origin Policy) | Internal employee apps (B2E) |
+| `Experience` | App is served by an Experience Cloud site (unchanged from Beta) | External B2B / B2C portals |
 
 `AppLauncher` was the Beta target name and is deprecated. Use `CustomApplication` on API v67.0+.
 
@@ -53,23 +53,30 @@ The `<target>` element in `.uibundle-meta.xml` accepts:
 |---|---|
 | Standard web APIs (`fetch` to *non-Salesforce* endpoints, `URL`, etc.) | `lightning/*` modules, Lightning base components |
 | Any npm package | `@wire` decorators |
-| `@salesforce/sdk-data` (Data SDK) | Most other `@salesforce/*` scoped modules |
+| `@salesforce/platform-sdk/data` (Data SDK) | Most other `@salesforce/*` scoped modules |
 | `@salesforce/agentforce-conversation-client` (ACC) | Direct `axios` / `fetch` to Salesforce endpoints |
 | `@salesforce/ui-bundle` helpers | |
 | `@salesforce/vite-plugin-ui-bundle` (dev only) | |
 
 ## Availability
 
-**Generally available since June 3, 2026.** Multi-Framework runs in **all org editions — Developer Edition, Sandbox, and Production**, with scratch orgs supported for development. More capabilities (including Agentforce Vibes 2.0) are on the way.
+**Generally available since July 16, 2026.** Multi-Framework runs in **all org editions — Developer Edition, Sandbox, and Production** on the **Summer '26 release or later**, with **no opt-in required**; scratch orgs are supported for development. Employee-facing apps run on the dedicated **`salesforce.app`** domain, and the Data SDK is GA as **`@salesforce/platform-sdk`**.
 
 ## Current limitations
 
 - **Default language must be `en_US`** — known issue with non-English orgs.
 - **Once enabled, cannot be disabled** in an org.
-- **Agentforce Vibes 2.0** support is on the way (Vibes 1.0 works today).
 - **One UI bundle per metadata push** is the safe pattern; multi-app deploys can collide.
 - **No Experience Builder editing** for sites attached to React apps.
-- **Currently React only** — additional frameworks planned over time.
+- **Currently React only** — Angular is on the roadmap.
+
+## Roadmap (not yet GA)
+
+- **Microfrontends** — embed externally hosted React components in Lightning alongside LWCs, passing events between them.
+- **Angular support** — additional frameworks beyond React.
+- **Localization** — languages, locales, and timezones via Translation Workbench or metadata.
+- **Managed packages** — build, test, distribute, and deploy Multi-Framework apps as managed packages.
+- **App management** — view/manage basic app details (name, description, URL) from App Manager.
 
 ## Related platform features
 

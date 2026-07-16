@@ -1,6 +1,20 @@
 # Error Handling
 
-GraphQL responses can carry **both `data` and `errors`** in the same payload — partial success is a real outcome. `sdk.fetch?.()` calls add transport errors and HTTP-level errors on top. Pick a strategy per call site based on what "good enough" means for that operation.
+GraphQL responses can carry **both `data` and `errors`** in the same payload — partial success is a real outcome. As of GA, `response.data` is also typed as possibly `undefined`, so optional-chain through it (`response?.data?.uiapi…`). `sdk.fetch?.()` calls add transport errors and HTTP-level errors on top. Pick a strategy per call site based on what "good enough" means for that operation.
+
+## `GraphQLError` shape
+
+Each entry in `response.errors` is a `GraphQLError`:
+
+```ts
+interface GraphQLError {
+  message: string;
+  locations?: { line: number; column: number }[];
+  path?: string[];   // e.g. ["uiapi", "AccountCreate", "Record", "AnnualRevenue"]
+}
+```
+
+`path` pinpoints the field that failed (useful for field-level access errors on mutations); `message` is what you surface to users.
 
 ## Three GraphQL error strategies
 
@@ -11,7 +25,7 @@ GraphQL responses can carry **both `data` and `errors`** in the same payload —
 ```ts
 async function strictExecute<T>(query: string, variables?: object): Promise<T> {
   const sdk = await createDataSDK();
-  const response = await sdk.graphql?.(query, variables);
+  const response = await sdk.graphql?.query({ query, variables });
   if (!response) throw new Error("GraphQL surface unavailable");
   if (response.errors?.length) {
     throw new Error(response.errors.map(e => e.message).join("; "));
@@ -29,7 +43,7 @@ Good fit: financial summaries, compliance lookups, anything where a partial resu
 ```ts
 async function tolerantExecute<T>(query: string, variables?: object): Promise<T> {
   const sdk = await createDataSDK();
-  const response = await sdk.graphql?.(query, variables);
+  const response = await sdk.graphql?.query({ query, variables });
   if (!response?.data) {
     throw new Error("No data returned");
   }
@@ -42,14 +56,17 @@ async function tolerantExecute<T>(query: string, variables?: object): Promise<T>
 
 Good fit: list views with optional fields (e.g. `Photo`, `Industry`) where missing values render as empty cells.
 
+> **Partial responses aren't cached.** When a query returns both `data` and `errors`, the SDK does not cache it — every subsequent call re-fetches from the network. Don't rely on caching to smooth over partially-failing queries.
+
 ### 3. Permissive — fail only when nothing usable came back
 
 > Use when: mutations succeed but can't read back every requested field; the operation itself is what matters.
 
 ```ts
-async function permissiveExecute<T>(query: string, variables?: object): Promise<T> {
+async function permissiveExecute<T>(mutation: string, variables?: object): Promise<T> {
   const sdk = await createDataSDK();
-  const response = await sdk.graphql?.(query, variables);
+  // Permissive is typically for writes — use .mutate() with a `mutation` key.
+  const response = await sdk.graphql?.mutate({ mutation, variables });
   if (!response) throw new Error("GraphQL surface unavailable");
   if (!response.data && response.errors?.length) {
     throw new Error(response.errors.map(e => e.message).join("; "));
@@ -59,6 +76,10 @@ async function permissiveExecute<T>(query: string, variables?: object): Promise<
 ```
 
 Good fit: `<Object>Update` mutations that return a `Record` containing fields the user lacks read access to.
+
+> **Mutations preserve partial data.** A partially successful mutation returns *both* `data` and `errors` — the SDK keeps the partial payload, so callers can still use the fields that came back (e.g. the new `Id`) even when other fields errored (typically field-level access on the returned `Record`). Don't discard `data` just because `errors` is non-empty.
+>
+> `MutationResult` has **no** `refresh()` / `subscribe()`. To refresh views after a write, call `refresh()` on the relevant *query* result (or re-run the query). See [data-sdk.md](data-sdk.md).
 
 ## Picking a strategy
 
@@ -128,7 +149,7 @@ const sdk = await createDataSDK({
 
 ## React error boundaries
 
-For component-tree errors (rendering, derived state), use Error Boundaries. Boundaries do **not** catch async errors from `sdk.graphql?.()` — those need standard `try / catch` or Promise `.catch()`. Use both layered.
+For component-tree errors (rendering, derived state), use Error Boundaries. Boundaries do **not** catch async errors from `sdk.graphql?.query()` / `.mutate()` — those need standard `try / catch` or Promise `.catch()`. Use both layered.
 
 ```tsx
 class RecipeBoundary extends React.Component<

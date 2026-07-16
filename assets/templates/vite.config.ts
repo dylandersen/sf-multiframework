@@ -5,7 +5,7 @@ import path from "node:path";
 
 // Minimal Vite config for a Salesforce Multi-Framework UI bundle.
 // The @salesforce/vite-plugin-ui-bundle integration proxies Salesforce
-// API calls during dev so @salesforce/sdk-data works against a real org.
+// API calls during dev so @salesforce/platform-sdk/data works against a real org.
 
 export default defineConfig({
   plugins: [react(), uiBundle()],

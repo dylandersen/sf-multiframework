@@ -36,10 +36,11 @@ Bucketed by where the failure happens. Each row is a real failure mode seen in M
 
 ## Accessing internal apps
 
-Internal `CustomApplication` UI bundles are served from the `.salesforce.app` domain, not the `.my.salesforce.com` Lightning domain. Launch from App Launcher whenever possible because it handles session bootstrapping. The direct URL pattern is:
+Internal `CustomApplication` UI bundles are served from the dedicated **`salesforce.app`** domain, not the `.my.salesforce.com` Lightning domain. Each app runs on its own origin, so the browser's Same Origin Policy isolates it natively (one app can't read another's cookies or storage — no proprietary sandboxing needed). Launch from App Launcher whenever possible because it handles session bootstrapping. The direct URL pattern is:
 
 ```text
-https://<instance>--c.<pod>.my.salesforce.app/app/c__<AppDeveloperName>
+https://<org>--<namespace>.<instance>.my.salesforce.app/app/c__<bundleName>
+# e.g. https://acme-corp-dev-ed--c.scratch.my.salesforce.app/app/c__myReactApp
 ```
 
 Direct navigation to raw `/lwr/application/...` paths on the Lightning domain can return HTTP 400 even when the bundle deployed correctly. The old Beta access path `/lwr/application/ai/c-<bundle>` is especially deceptive post-GA: the shell renders but no session is attached, so every Data SDK / Apex REST call fails with `INVALID_SESSION_ID`. Always launch from the App Launcher.
@@ -52,7 +53,7 @@ Direct navigation to raw `/lwr/application/...` paths on the Lightning domain ca
 | `edges` is null / empty despite data existing | Filter excludes everything; permission issue | Drop the filter; confirm running user has access |
 | Codegen produces empty or `any` types | `schema.graphql` missing or scalars not mapped | `npm run graphql:schema` then add scalar mappings to `codegen.yml` |
 | `GraphQL surface unavailable` thrown | Running in a surface that doesn't expose `graphql` | Use `sdk.fetch?.()` with allow-listed REST endpoint |
-| 401 on every call after deploy | Bypassing Data SDK | Refactor to `createDataSDK()` / `sdk.graphql?.()` / `sdk.fetch?.()` |
+| 401 on every call after deploy | Bypassing Data SDK | Refactor to `createDataSDK()` / `sdk.graphql?.query()` / `sdk.graphql?.mutate()` / `sdk.fetch?.()` |
 | Mutation succeeds but returned record has errors | Field can't be selected on mutation return | Switch call site to **Permissive** error strategy or remove offending fields |
 | `gql` template provides no IntelliSense | GraphQL ESLint plugin / extension not configured | Install `@graphql-eslint/eslint-plugin`; configure `.eslintrc` |
 | Local dev fetches succeed, deployed fetches 401/403 | `basePath` mismatch between dev and deployed surface | Don't hard-code paths; let SDK resolve |
@@ -120,6 +121,6 @@ This feature still changes quickly. Real issues exist beyond what's listed here.
 
 - Include org type (sandbox / scratch), org language, API version
 - Include `sf --version` and `node -v`
-- Include `package.json` of the bundle (versions of `@salesforce/sdk-data`, `@salesforce/agentforce-conversation-client`)
+- Include `package.json` of the bundle (versions of `@salesforce/platform-sdk`, `@salesforce/agentforce-conversation-client`)
 - Include exact `ui-bundle.json` and `<app>.uibundle-meta.xml`
 - Reproduce against `multiframework-recipes` if possible to isolate

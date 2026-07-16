@@ -4,7 +4,7 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 
 ## Org & Environment
 
-- [ ] Org is a supported edition — **DE, Sandbox, Production, or Scratch** (all editions supported since June 3, 2026)
+- [ ] Org is a supported edition — **DE, Sandbox, Production, or Scratch** (all editions on the **Summer '26 release or later**, no opt-in; GA July 16, 2026)
 - [ ] Org default language is **`en_US`** (scratch org def explicitly sets `"language": "en_US"`)
 - [ ] **Salesforce Multi-Framework** enabled in Setup → cannot be disabled later
 - [ ] User has **Customize Application** permission to enable the feature
@@ -58,11 +58,12 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 
 ## Data SDK & GraphQL
 
-- [ ] All Salesforce calls go through `@salesforce/sdk-data` (`createDataSDK`, `gql`)
+- [ ] All Salesforce calls go through the Data SDK, imported from `@salesforce/platform-sdk/data` (`createDataSDK`, `gql`)
 - [ ] **No raw `fetch()` or `axios`** to Salesforce endpoints
 - [ ] `schema.graphql` generated from a connected org (`npm run graphql:schema`)
 - [ ] `src/api/graphql-operations-types.ts` regenerated after every `.graphql` edit (`npm run graphql:codegen`)
-- [ ] Optional chaining used: `sdk.graphql?.()`, `sdk.fetch?.()`
+- [ ] Reads use `sdk.graphql?.query({ query })`, writes use `sdk.graphql?.mutate({ mutation })` (Beta's generic `graphql()` is gone)
+- [ ] Optional chaining used on SDK methods and on `result.data`: `sdk.graphql?.query()`, `sdk.fetch?.()`, `result?.data?.uiapi`
 - [ ] Field reads use `{ value }` shape: `record.Name.value`
 - [ ] Connection reads use `edges/node` pattern: `result.uiapi.query.X.edges?.map(e => e?.node)`
 - [ ] Error strategy chosen per call site: Strict / Tolerant / Permissive
@@ -89,6 +90,6 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 
 - [ ] **No** Lightning base components (`lightning-card`, `lightning-button`) — not supported in React UI bundles
 - [ ] **No** `@wire` decorators
-- [ ] **No** `@salesforce/*` imports other than `sdk-data`, ACC, or `@salesforce/ui-bundle`
+- [ ] **No** `@salesforce/*` imports other than `@salesforce/platform-sdk/data`, ACC, or `@salesforce/ui-bundle`
 - [ ] **No** raw `fetch()` to `/services/data/...`
 - [ ] **No** debug code (`console.log` of SDK objects, response dumps) in committed recipes

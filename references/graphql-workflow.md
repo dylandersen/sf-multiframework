@@ -38,7 +38,7 @@ Notes:
 ### Pattern A — Inline `gql` (simple)
 
 ```ts
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk/data";
 
 const SINGLE_ACCOUNT = gql`
   query SingleAccount {
@@ -170,7 +170,7 @@ export async function getAccounts(first: number) {
 ### Inline usage
 
 ```tsx
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk/data";
 
 const QUERY = gql`
   query SingleAccount {
@@ -179,10 +179,26 @@ const QUERY = gql`
 `;
 
 const sdk = await createDataSDK();
-const data = await sdk.graphql?.(QUERY);
+const res = await sdk.graphql?.query({ query: QUERY });
+const data = res?.data; // possibly undefined as of GA — optional-chain onward
 ```
 
 For inline `gql` queries, codegen still picks up the operation if your `documents` glob includes `.ts` / `.tsx`.
+
+### Query options and reactivity
+
+`query()` accepts more than `query` / `variables`:
+
+```ts
+const res = await sdk.graphql?.query<MyQuery, MyQueryVariables>({
+  query: QUERY,
+  variables,
+  operationName: "MyQuery",                     // for multi-operation documents
+  cacheControl: { type: "max-age", maxAge: 60 } // "no-cache" | "only-if-cached" | { type, maxAge }
+});
+```
+
+The returned `QueryResult` is reactive: `res?.subscribe(cb)` streams later snapshots and `res?.refresh()` forces a fresh fetch. `mutate()` takes `{ mutation, variables, operationName }` only — no `cacheControl`, no `subscribe`/`refresh`. Full interfaces: [data-sdk.md](data-sdk.md).
 
 ## Mutations
 
@@ -201,7 +217,31 @@ mutation UpdateAccount($input: AccountUpdateInput!) {
 }
 ```
 
-Mutation input types follow the pattern `<ObjectName>CreateInput` / `<ObjectName>UpdateInput`. Search the schema first:
+Call mutations through `sdk.graphql?.mutate({ mutation, variables })` (the `mutation` key, not `query`):
+
+```ts
+const res = await sdk.graphql?.mutate({ mutation: UPDATE_ACCOUNT, variables: { input } });
+const record = res?.data?.uiapi?.AccountUpdate?.Record;
+```
+
+### Input variable shapes (the nesting catches people out)
+
+The `input` variable nests the field map under the **object name**, and update/delete carry the `Id` at the top of `input`:
+
+```ts
+// Create — fields nested under the object name
+{ input: { Account: { Name, Industry, Phone, Website } } }
+
+// Update — top-level Id + nested field map
+{ input: { Id, Account: { Name, Industry, AnnualRevenue } } }
+
+// Delete — Id only
+{ input: { Id } }
+```
+
+Return shapes: **Create/Update** return `Record { Id ... }`; **Delete** returns only `Id` (no `Record`). Always select `Id` in the return.
+
+Mutation input types follow the pattern `<ObjectName>CreateInput` / `<ObjectName>UpdateInput` / `<ObjectName>DeleteInput`. Search the schema first:
 
 ```bash
 # Find available fields
@@ -212,6 +252,31 @@ rg "input Account_Filter|input Account_OrderBy|input AccountUpdateInput" schema.
 ```
 
 > Some fields **cannot be returned** from a mutation. If you get partial data + errors back, use the **Permissive** error strategy or remove the offending fields from the return shape. See [error-handling.md](error-handling.md).
+
+### Refreshing data after a mutation
+
+Mutations don't touch the cache, so the UI won't update on its own. Three patterns:
+
+1. **`QueryResult.refresh()`** — if you kept the `QueryResult` from the original `query()` (and are `subscribe()`d to it), call `await result.refresh()` after the mutation; subscribers re-render.
+2. **Re-query** — if you don't have the `QueryResult`, just call your loader again (or issue the query with `cacheControl: "no-cache"` to force fresh data).
+3. **Optimistic update** — update local state immediately, then reconcile: on failure, revert by calling `result.refresh()` (or re-query).
+
+```ts
+// Optimistic delete with revert-on-failure
+setAccounts(prev => prev.filter(a => a.Id !== id));
+try {
+  await deleteAccount(id);
+} catch {
+  await accountsResult?.refresh(); // revert to server truth
+}
+```
+
+### Mutation best practices
+
+- **Always select `Id`** in create/update return fields.
+- **Type the input** with an explicit interface (`CreateAccountInput`) and use generated `<Op>Mutation` / `<Op>MutationVariables` types on `mutate<T, V>()`.
+- **Show loading + success/error feedback**, and **reset form state** on success.
+- **Batch related writes** (e.g. create Account, then `Promise.all` its Contacts with the new `Id`).
 
 ## Schema exploration tips
 

@@ -2,8 +2,13 @@
  * Strict-by-default GraphQL wrapper around the Data SDK.
  *
  * Use this for production code that wants type-safe call sites.
- * Recipes should use inline gql + sdk.graphql?.() directly so the lesson
- * is visible in the recipe file.
+ * Recipes should use inline gql + sdk.graphql?.query() / .mutate() directly
+ * so the lesson is visible in the recipe file.
+ *
+ * GA note: install @salesforce/platform-sdk and import from its /data subpath
+ * (@salesforce/platform-sdk/data). Reads go through .query({ query }), writes
+ * through .mutate({ mutation }), and response.data is possibly undefined.
+ * query() results are reactive (subscribe/refresh) and cached; mutate() is not.
  *
  * Strategy variants (see references/error-handling.md):
  *   - Strict      — fail on any error
@@ -11,8 +16,8 @@
  *   - Permissive  — only fail when no data at all (mutations)
  */
 
-import { createDataSDK } from "@salesforce/sdk-data";
-export { gql } from "@salesforce/sdk-data";
+import { createDataSDK } from "@salesforce/platform-sdk/data";
+export { gql } from "@salesforce/platform-sdk/data";
 
 let sdkPromise: ReturnType<typeof createDataSDK> | null = null;
 
@@ -41,7 +46,7 @@ export async function executeGraphQL<TData, TVars = Record<string, unknown>>({
   variables?: TVars;
 }): Promise<TData> {
   const sdk = await getSdk();
-  const response = await sdk.graphql?.(query, variables);
+  const response = await sdk.graphql?.query({ query, variables });
 
   if (!response) {
     throw new Error("GraphQL surface unavailable in this environment");
@@ -60,7 +65,7 @@ export async function executeGraphQLTolerant<TData, TVars = Record<string, unkno
   variables?: TVars;
 }): Promise<TData> {
   const sdk = await getSdk();
-  const response = await sdk.graphql?.(query, variables);
+  const response = await sdk.graphql?.query({ query, variables });
 
   if (!response?.data) {
     throw new Error("No data returned");
@@ -72,14 +77,15 @@ export async function executeGraphQLTolerant<TData, TVars = Record<string, unkno
 }
 
 export async function executeGraphQLPermissive<TData, TVars = Record<string, unknown>>({
-  query,
+  mutation,
   variables
 }: {
-  query: string;
+  mutation: string;
   variables?: TVars;
 }): Promise<TData> {
   const sdk = await getSdk();
-  const response = await sdk.graphql?.(query, variables);
+  // Permissive is typically used for writes — call .mutate() with a `mutation` key.
+  const response = await sdk.graphql?.mutate({ mutation, variables });
 
   if (!response) {
     throw new Error("GraphQL surface unavailable");

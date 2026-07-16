@@ -90,17 +90,17 @@ Without these, every axe assertion throws `TypeError: getContext is not a functi
 
 ## The standard recipe test pattern
 
-Each recipe gets a `<Name>.test.tsx` sibling file. Mock `@salesforce/sdk-data` globally, control `graphql` / `fetch` per test, assert on DOM:
+Each recipe gets a `<Name>.test.tsx` sibling file. Mock `@salesforce/platform-sdk` globally, control `graphql` / `fetch` per test, assert on DOM:
 
 ```tsx
 // src/recipes/hello/BindingAccountName.test.tsx
 import { render, screen } from "@testing-library/react";
 import type { Mock } from "vitest";
-import { createDataSDK } from "@salesforce/sdk-data";
+import { createDataSDK } from "@salesforce/platform-sdk/data";
 import { axe } from "vitest-axe";
 import BindingAccountName from "./BindingAccountName";
 
-vi.mock("@salesforce/sdk-data", () => ({
+vi.mock("@salesforce/platform-sdk/data", () => ({
   createDataSDK: vi.fn(),
   gql: (strings: TemplateStringsArray) => strings.join(""),
 }));
@@ -122,7 +122,10 @@ describe("BindingAccountName", () => {
   const mockGraphql = vi.fn();
 
   beforeEach(() => {
-    (createDataSDK as Mock).mockResolvedValue({ graphql: mockGraphql });
+    // GA shape: graphql is an object with .query() and .mutate().
+    (createDataSDK as Mock).mockResolvedValue({
+      graphql: { query: mockGraphql, mutate: vi.fn() },
+    });
   });
 
   afterEach(() => {
@@ -155,7 +158,7 @@ describe("BindingAccountName", () => {
 
 | LWC Jest | React equivalent |
 |---|---|
-| `registerApexTestWireAdapter` / `registerLdsTestWireAdapter` | `vi.mock('@salesforce/sdk-data', () => ...)` with a `vi.fn()` graphql |
+| `registerApexTestWireAdapter` / `registerLdsTestWireAdapter` | `vi.mock('@salesforce/platform-sdk/data', () => ...)` with `graphql: { query: vi.fn(), mutate: vi.fn() }` |
 | `adapter.emit(data); await Promise.resolve()` | `mockGraphql.mockResolvedValue(data)` + `await screen.findByText(...)` |
 | `el.shadowRoot.querySelector(...)` | `screen.getByRole(...)` / `screen.getByText(...)` / `container.querySelector(...)` |
 | `flushPromises()` | `findBy*` queries poll automatically; or `await waitFor(() => ...)` |
@@ -295,7 +298,7 @@ Full CI sequence: [ci-deploy.md](ci-deploy.md).
 | Symptom | Cause |
 |---|---|
 | `TypeError: getContext is not a function` in axe tests | Missing `HTMLCanvasElement` stub in `vitest.setup.ts` |
-| `Cannot find module '@salesforce/sdk-data'` in tests | Vitest needs a `vi.mock(...)` hoist; verify it's at the top of the file |
+| `Cannot find module '@salesforce/platform-sdk/data'` in tests | Vitest needs a `vi.mock(...)` hoist; verify it's at the top of the file |
 | `findBy*` queries time out but UI clearly renders | Check whether the mocked `graphql` actually resolves — missing `.mockResolvedValue(...)` returns `undefined` |
 | Playwright webServer times out in CI | Increase `timeout` to 120s; confirm `dist/` exists before `webServer` runs |
 | Coverage report shows 0% for route pages | `src/pages` is glob-included but the pages just forward to recipes; test the recipes directly or exclude `src/pages` |

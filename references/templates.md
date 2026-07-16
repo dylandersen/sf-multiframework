@@ -106,7 +106,7 @@ If you're not using a template and writing the bundle by hand, install these hel
 
 ```bash
 npm install --save-dev @salesforce/vite-plugin-ui-bundle
-npm install @salesforce/ui-bundle @salesforce/sdk-data
+npm install @salesforce/ui-bundle @salesforce/platform-sdk
 ```
 
 Minimum `vite.config.ts`:

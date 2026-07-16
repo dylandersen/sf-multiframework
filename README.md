@@ -2,9 +2,29 @@
 
 ⚛️ **Salesforce Multi-Framework skill** — by Dylan Andersen · **v2.2**
 
-Build React apps that run on the Agentforce 360 Platform via the `UIBundle` metadata type.
+An agent skill that teaches your AI coding agent to build, wire, and deploy **React apps on the Salesforce Agentforce 360 Platform** (the `UIBundle` metadata type) the right way — Data SDK + GraphQL, routing, styling, permissions, and CI deploy — plus a 100-point scoring rubric it can use to grade its own output.
 
 > Format and cross-skill conventions inspired by [Jag Valaiyapathy's SF Skills](https://github.com/Jaganpro). Built from official [Salesforce docs](references/official-sources.md) + [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes). Deployment corrections from hands-on, end-to-end deploy testing by [Evan Jochims](https://github.com/ejochims), Distinguished, Strategic Solution Engineer at Salesforce. Works in any MCP-capable agent or IDE.
+
+## Install
+
+```bash
+npx skills add dylandersen/sf-multiframework --global
+```
+
+## When to use it
+
+Your agent should reach for this skill whenever you ask it to scaffold, build, review, or deploy a Salesforce Multi-Framework / `UIBundle` React app — for example "build a React app for Salesforce", "query records with the Data SDK", or "deploy my UIBundle".
+
+## What's inside
+
+- **[SKILL.md](SKILL.md)** — the core rules, build/deploy workflow, and 100-point scoring rubric.
+- **[references/](references/)** — deep dives: Data SDK & GraphQL, error handling, Beta→GA migration, routing, styling, testing, CI deploy, permissions/CSP, LWC↔React mapping, and more.
+- **[assets/](assets/)** — ready-to-copy templates and examples (`vite.config.ts`, metadata XML, GraphQL client, sample components).
+
+## Compatibility
+
+Targets Salesforce Multi-Framework **GA (July 16, 2026)** — Summer '26+, API v67.0+, all org editions. Uses the GA **Data SDK** (`@salesforce/platform-sdk`, imported from `@salesforce/platform-sdk/data`).
 
 ## What's New in v2.2 (GA alignment)
 
@@ -14,39 +34,6 @@ Build React apps that run on the Agentforce 360 Platform via the `UIBundle` meta
 - **`CustomApplication` target** replaces the Beta `AppLauncher`; employee apps now run on the dedicated **`salesforce.app`** domain.
 - **No more scratch opt-in**: the deprecated `UiBundleSettings`/`webAppOptIn` config is removed — GA needs no opt-in on Summer '26+.
 - **New/rewritten references**: Beta→GA migration playbook, mutation CRUD + refresh/optimistic patterns, cache-control semantics, and an LWC→React mapping.
-
-## Status
-
-Generally available since **July 16, 2026** — all org editions, no opt-in, on **Summer '26+** (API v67.0+, `en_US`). The **Data SDK is GA** (`@salesforce/platform-sdk`, imported from `@salesforce/platform-sdk/data`) with reactive, cached GraphQL `.query()`/`.mutate()`. Full details in [SKILL.md](SKILL.md).
-
-## Requirements
-
-| Requirement | Value |
-|---|---|
-| Org type | Any edition — DE, Sandbox, Production (Scratch for dev) |
-| Default language | `en_US` |
-| API version | v67.0+ |
-| Node.js | v22+ |
-| `sf` CLI | latest + `@salesforce/plugin-ui-bundle-dev` |
-| External apps | Community user licenses |
-| ACC | Agentforce + Employee Agent configured |
-
-## Quick Start
-
-```bash
-npx skills add dylandersen/sf-multiframework --global
-```
-
-## Critical Rules
-
-1. Use the Data SDK (install `@salesforce/platform-sdk`, import from `@salesforce/platform-sdk/data`) — never raw `fetch()` / `axios` to Salesforce. Reads: `sdk.graphql?.query({ query })`; writes: `sdk.graphql?.mutate({ mutation })`; `result.data` is possibly `undefined` (optional-chain it). Queries are reactive (`subscribe`/`refresh`) and cached.
-2. GraphQL UI API wraps every field in `{ value }`.
-3. `ui-bundle.json` needs `routing.fallback: "index.html"` for SPA refresh.
-4. `.uibundle-meta.xml` `target` (`CustomApplication` vs `Experience`) is binding — not hot-swappable.
-5. One styling system per component; UIBundle has a 2,500-file ceiling.
-6. Inside a React bundle, `lightning/*`, `@wire`, and most `@salesforce/*` packages are unsupported (`@salesforce/platform-sdk/data`, ACC, and `@salesforce/ui-bundle` excepted).
-
-Full rules, workflow, and the 100-point scoring rubric live in **[SKILL.md](SKILL.md)** and **[references/](references/)**.
 
 ## Cross-Skill Workflow
 

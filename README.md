@@ -17,7 +17,7 @@ Build React apps that run on the Agentforce 360 Platform via the `UIBundle` meta
 
 ## Status
 
-Salesforce Multi-Framework (React) became generally available on **July 16, 2026** and now runs across **all org editions — Developer Edition, Sandbox, and Production** on the **Summer '26 release or later** with **no opt-in required** (scratch orgs remain supported for development). It requires API v67.0+ and a default org language of `en_US`, and once enabled in an org it **cannot be disabled**. Two GA changes to know: employee-facing apps run on the dedicated **`salesforce.app`** domain (each app on its own origin, isolated by the browser's Same Origin Policy), and the **Data SDK is GA** — install `@salesforce/platform-sdk`, import from the `@salesforce/platform-sdk/data` subpath (Beta shipped as `@salesforce/sdk-data`), with reads on `.query()`, writes on `.mutate()`, reactive `subscribe`/`refresh`, and a shared GraphQL cache. Roadmap: microfrontends, Angular support, localization, managed packages, and app management in App Manager.
+Generally available since **July 16, 2026** — all org editions, no opt-in, on **Summer '26+** (API v67.0+, `en_US`). The **Data SDK is GA** (`@salesforce/platform-sdk`, imported from `@salesforce/platform-sdk/data`) with reactive, cached GraphQL `.query()`/`.mutate()`. Full details in [SKILL.md](SKILL.md).
 
 ## Requirements
 
@@ -34,26 +34,8 @@ Salesforce Multi-Framework (React) became generally available on **July 16, 2026
 ## Quick Start
 
 ```bash
-# 1. Enable "Salesforce Multi-Framework" in Setup, then install the plugin
-sf plugins install @salesforce/plugin-ui-bundle-dev
-
-# 2. Scaffold (reactbasic = internal app, default = manual wiring)
-sf template generate ui-bundle --name myApp --template reactbasic
-
-# 3. Develop locally
-cd force-app/main/default/uiBundles/myApp && npm install
-npm run graphql:schema && npm run graphql:codegen   # types from connected org
-npm run dev                                          # Vite dev server
-
-# 4. Build + deploy (internal apps need the companion CustomApplication)
-npm run build && cd ../../../../..
-sf project deploy start \
-  --source-dir force-app/main/default/uiBundles/myApp \
-  --source-dir force-app/main/default/applications \
-  --target-org TARGET
+npx skills add dylandersen/sf-multiframework --global
 ```
-
-Internal apps require `applications/<AppName>.app-meta.xml` with `<uiBundle>myApp</uiBundle>`, deployed on **API v67.0+** and granted to users via `SetupEntityAccess`. Older Beta docs may say `reactinternalapp` / `reactexternalapp` — verify with `sf template generate ui-bundle --help`.
 
 ## Critical Rules
 

@@ -38,7 +38,7 @@ Notes:
 ### Pattern A — Inline `gql` (simple)
 
 ```ts
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 
 const SINGLE_ACCOUNT = gql`
   query SingleAccount {
@@ -170,7 +170,7 @@ export async function getAccounts(first: number) {
 ### Inline usage
 
 ```tsx
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 
 const QUERY = gql`
   query SingleAccount {

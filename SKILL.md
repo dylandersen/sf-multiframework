@@ -5,11 +5,12 @@ description: >
   the Agentforce 360 Platform.
   TRIGGER when user creates or edits UI bundles (`uiBundles/`), authors React
   apps deployed via `UIBundle` metadata, configures `ui-bundle.json` /
-  `.uibundle-meta.xml`, uses `@salesforce/sdk-data` (Data SDK + GraphQL), wires
+  `.uibundle-meta.xml`, uses `@salesforce/platform-sdk` (Data SDK + GraphQL), wires
   up the Agentforce Conversation Client (ACC) in React, builds custom AI/chat
   surfaces backed by Apex REST + Models API, designs three-panel workspace
-  shells, scaffolds with `sf template generate ui-bundle`, or asks about
-  React vs LWC choice on Salesforce.
+  shells, scaffolds with `sf template generate project` or `sf template generate ui-bundle`,
+  configures Experience Cloud React app containers, or asks about React vs LWC
+  choice on Salesforce.
   DO NOT TRIGGER when the work is pure LWC (use generating-lwc-components),
   generic Apex (use generating-apex), or Agentforce agent metadata and
   `.agent` script files (use developing-agentforce).
@@ -45,8 +46,8 @@ Use `sf-multiframework` when the work involves:
 
 - creating or editing files inside `force-app/main/.../uiBundles/<appName>/`
 - authoring `ui-bundle.json` and `.uibundle-meta.xml`
-- scaffolding via `sf template generate ui-bundle` (`reactbasic` / `default`; older Beta docs may mention `reactinternalapp` / `reactexternalapp`)
-- using `@salesforce/sdk-data` (`createDataSDK`, `gql`, `dataSdk.graphql?.()`, `dataSdk.fetch?.()`)
+- scaffolding via `sf template generate ui-bundle` (`reactbasic` / `default`) or full project templates such as `sf template generate project --template reactinternalapp|reactexternalapp` when the installed CLI lists them
+- using `@salesforce/platform-sdk` (`createDataSDK`, `gql`, `dataSdk.graphql?.()`, `dataSdk.fetch?.()`); older docs and recipes may call this the Data SDK or reference `@salesforce/sdk-data`
 - generating GraphQL types via codegen (`schema.graphql`, `graphql-operations-types.ts`)
 - embedding the Agentforce Conversation Client (`@salesforce/agentforce-conversation-client`)
 - choosing styling (SLDS blueprints vs `@salesforce/design-system-react` vs Tailwind/shadcn)
@@ -69,7 +70,7 @@ Before authoring or fixing anything, infer or ask:
 
 1. **Org type**: DE, Sandbox, Production, or Scratch? (All editions are supported; scratch orgs are typical for development.)
 2. **App target**: `CustomApplication` (internal employee app) or `Experience` (external B2B/B2C portal)?
-3. **Template**: `reactbasic`, `default`, or no template (manual setup)? Only use legacy names like `reactinternalapp` if `sf template generate ui-bundle --help` lists them.
+3. **Template command**: adding a bundle to an existing project (`sf template generate ui-bundle --template reactbasic|default`) or generating a full project (`sf template generate project --template reactinternalapp|reactexternalapp` when listed by the installed CLI)?
 4. **ACC needed?** If yes, is the agent an Employee Agent? Are cookies + Trusted Domains configured?
 5. **Data access pattern**: GraphQL (preferred), UI API REST, or Apex REST?
 6. **Styling system**: SLDS blueprints, `design-system-react`, or Tailwind/shadcn?
@@ -94,10 +95,10 @@ Verify these before authoring or fixing any Multi-Framework app:
 9. **SPA fallback** is set: `routing.fallback: "index.html"` for client-side routing.
 10. **API version is managed by `sfdx-project.json` and deploy API version**. Current UI bundle validators can reject `apiVersion` inside `ui-bundle.json`.
 11. **`outputDir` build artifacts exist before deploy** — run `npm run build` inside the bundle directory.
-12. **For external apps**: `digitalExperiences/.../sfdc_cms_site/content.json` has `appContainer: true` and `appSpace: "<namespace>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace).
+12. **For external apps**: current generated Experience metadata uses `digitalExperiences/site/<SiteName>/sfdc_cms__site/<SiteName>/content.json` with `contentBody.appContainer: true` and `contentBody.appSpace: "<namespace>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace).
 13. **For ACC**: My Domain "Require first-party use of Salesforce cookies" is **unchecked**, and the host domain is registered under **Trusted Domains for Inline Frames** (Lightning Out type).
 14. **GraphQL schema is generated from a connected org** (`npm run graphql:schema`) before running codegen.
-15. **Use `@salesforce/sdk-data`** for all Salesforce API calls — never `fetch()` or `axios` directly to Salesforce endpoints.
+15. **Use `@salesforce/platform-sdk`** for all Salesforce API calls — never `fetch()` or `axios` directly to Salesforce endpoints. If an older sample imports `@salesforce/sdk-data`, compare against the current generated template before copying it.
 16. **Optional chaining** on SDK methods: `sdk.graphql?.()`, `sdk.fetch?.()` — they may not exist in every surface.
 17. **Only one UI bundle deploys per metadata push** — keep changes scoped to one app per deploy when possible.
 18. **UIBundle has a 2,500-file ceiling** — keep `dist/` lean.
@@ -110,10 +111,10 @@ Expanded version: [references/activation-checklist.md](references/activation-che
 
 ### 1) Use the Data SDK — never raw `fetch()` to Salesforce
 
-`@salesforce/sdk-data` handles auth, CSRF, and base-path resolution across surfaces (Lightning Experience, Experience Cloud, local Vite dev). Bypassing it breaks one or more of those surfaces.
+`@salesforce/platform-sdk` handles auth, CSRF, and base-path resolution across surfaces (Lightning Experience, Experience Cloud, local Vite dev). Bypassing it breaks one or more of those surfaces.
 
 ```ts
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 const sdk = await createDataSDK();
 const res = await sdk.graphql?.(MY_QUERY, variables);
 ```
@@ -177,7 +178,7 @@ Skipping any of these is the #1 cause of "the chat panel won't load" errors. See
 
 Inside a React UI bundle these are **not supported**:
 
-- `@salesforce/*` scoped modules **except** `@salesforce/sdk-data` (and the ACC and `@salesforce/ui-bundle` helpers)
+- `@salesforce/*` scoped modules **except** `@salesforce/platform-sdk` (and the ACC and `@salesforce/ui-bundle` helpers)
 - Lightning base components / `lightning/*` modules
 - `@wire` service
 
@@ -210,9 +211,9 @@ UI bundles can be hosted in sandboxed iframes where `window.localStorage` throws
 ### Phase 1 — Org & environment setup
 - enable **Salesforce Multi-Framework** in Setup
 - install Node 22+, latest `sf` CLI, Salesforce Extension Pack, `@salesforce/plugin-ui-bundle-dev`
-- for external apps: enable Digital Experiences, create a placeholder site, confirm Customer/Partner Community licenses
+- for external apps: enable Digital Experiences, create a placeholder site, confirm Customer/Partner Community licenses, and read the Experience runbook before debugging auth/access
 - for ACC: configure My Domain cookies, Trusted Domains for Inline Frames, and Agentforce preference
-- full sequence: [references/setup.md](references/setup.md)
+- full sequence: [references/setup.md](references/setup.md); external route and login details: [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md)
 
 ### Phase 2 — Scaffold the project
 
@@ -222,7 +223,11 @@ sf template generate ui-bundle --name myApp --template reactbasic
 # or start from the minimal template and wire metadata manually
 sf template generate ui-bundle --name myApp --template default
 
-# Verify available template names against the installed plugin:
+# For a full generated project/app scaffold, verify project templates too:
+sf template generate project --help
+sf template generate project --name MyPortal --template reactexternalapp --api-version 67.0
+
+# Verify available UI Bundle template names against the installed plugin:
 sf template generate ui-bundle --help
 ```
 
@@ -269,7 +274,7 @@ Preference: deploy via the **Salesforce DX MCP** (`mcp_Salesforce_DX_deploy_meta
 Best for recipes / single-component reads. The lesson is visible in the file.
 
 ```tsx
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 
 const QUERY = gql`
   query SingleAccount {
@@ -398,7 +403,7 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 | Codegen produces no types | `schema.graphql` missing — never ran `npm run graphql:schema` | [references/graphql-workflow.md](references/graphql-workflow.md) |
 | ACC FAB never appears | Trusted Domains not registered, or "Require first-party Salesforce cookies" still on | [references/acc-integration.md](references/acc-integration.md) |
 | ACC loads but disconnects on navigation | cookie policy / iframe origin mismatch | [references/acc-integration.md](references/acc-integration.md) |
-| External app deploys but never appears in Digital Experiences | `appContainer: true` or `appSpace` not set, or namespace prefix wrong | [references/templates.md](references/templates.md) |
+| External app deploys but never appears in Digital Experiences | `contentBody.appContainer: true` or `contentBody.appSpace` not set, namespace prefix wrong, or generated Experience metadata folders missing | [references/templates.md](references/templates.md), [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md) |
 | Mutation succeeds but read-back errors | UI API mutation return shape can't include some fields — switch to Permissive error strategy | [references/error-handling.md](references/error-handling.md) |
 | Build succeeds but deploy fails with file count error | UIBundle 2,500-file limit; prune `dist/` source maps or unused assets | [references/troubleshooting.md](references/troubleshooting.md) |
 | Deploy fails on `apiVersion`, `isEnabled`, or unknown `ui-bundle.json` keys | UIBundle metadata/runtime schema drift; use `isActive` + `version`, omit `apiVersion` from `ui-bundle.json` | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
@@ -410,6 +415,10 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 | Apex REST call returns `Could not find a match for URL` | backend `@RestResource` (and its dependency tree + custom objects) not deployed in this org | deploy the Apex backend, not just the bundle · [references/beta-to-ga-migration.md](references/beta-to-ga-migration.md) |
 | Internal app exists in `AppMenuItem` with `IsAccessible: false` | app access not granted | add `applicationVisibilities` to a profile, or link the app `ApplicationId` to a permission set |
 | Deploy includes `vite.config.js`, `.d.ts`, or `*.tsbuildinfo` | `tsc -b` emitted TypeScript artifacts into the bundle root | [references/project-structure.md](references/project-structure.md), [references/ci-deploy.md](references/ci-deploy.md) |
+| Public Experience route loads React but API returns Apex `403` | Guest profile lacks Apex access to the curated endpoint | [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md) |
+| Public board shows assigned/in-review records | Public criteria filters only a visibility flag, not final publication semantics | [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md) |
+| Reviewer logs in but sees no assignments | Auth/user Contact linkage works, but user-mode record sharing returns no assignment access | [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md) |
+| External user creation fails with portal account owner role error | Contact Account owner has no UserRole | [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md) |
 | `npm install` fails with Vite peer conflict | Salesforce Vite plugin lags the latest Vite major | [references/project-structure.md](references/project-structure.md), [references/troubleshooting.md](references/troubleshooting.md) |
 | `sf template generate ui-bundle` is not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | [references/cli-guide.md](references/cli-guide.md) |
 | Feature toggle missing in Setup | default language ≠ `en_US`, or the release hasn't reached the org yet (feature is available in DE, Sandbox, and Production) | [references/setup.md](references/setup.md) |
@@ -456,6 +465,7 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 - [references/styling.md](references/styling.md)
 - [references/layout-patterns.md](references/layout-patterns.md)
 - [references/acc-integration.md](references/acc-integration.md)
+- [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md)
 - [references/llm-ui-patterns.md](references/llm-ui-patterns.md)
 - [references/recipe-conventions.md](references/recipe-conventions.md)
 - [references/react-router.md](references/react-router.md)

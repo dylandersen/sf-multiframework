@@ -49,7 +49,7 @@ External React apps live inside an Experience Cloud site even though you don't a
 3. Click **Back to Setup** without picking a template — this just ensures the underlying dependencies exist.
 4. Confirm Customer/Partner Community user licenses are available.
 
-The metadata you ship later (`digitalExperienceConfigs`, `digitalExperiences/sfdc_cms_site`, `networks`, `sites`) wires the React app to the site.
+The metadata you ship later (`digitalExperienceConfigs`, `digitalExperiences/site/<SiteName>/sfdc_cms__site/<SiteName>/content.json`, `networks`, `sites`) wires the React app to the site. For public routes, login, forgot password, and Contact-linked external users, follow [experience-cloud-runbook.md](experience-cloud-runbook.md).
 
 ## 6. (Agentforce Vibes users only) MCP server setup
 

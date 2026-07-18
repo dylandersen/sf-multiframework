@@ -28,7 +28,7 @@ or the Salesforce mobile app as a reusable component?
 | **Learning curve** | Low for modern JS/HTML developers; standards-based | Low–moderate, depending on familiarity with React + ecosystem |
 | **Ecosystem** | Lightning base components, `@wire`, lwc-recipes | All of npm; React 19; Vite; React Router 7; shadcn; etc. |
 | **Styling** | Auto-applied SLDS via base components | SLDS blueprints, `design-system-react`, or Tailwind/shadcn — you choose |
-| **Data access** | LDS, `@wire`, Apex `@AuraEnabled` | `@salesforce/sdk-data` (GraphQL UI API + `fetch` allow-list) |
+| **Data access** | LDS, `@wire`, Apex `@AuraEnabled` | `@salesforce/platform-sdk` (GraphQL UI API + `fetch` allow-list) |
 | **Build / deploy** | First-class metadata, `sf project deploy` | UIBundle metadata; build artifacts in `dist/` ship with the bundle |
 | **Available surfaces** | Lightning Experience, Experience Cloud (LWR + Aura), Mobile app, Page templates, Flow Screens, App Builder | App Launcher via `CustomApplication` or Experience Cloud site (`Experience`) |
 | **Embedding inside another framework** | Native | Hosted alone (cross-framework via Micro-Frontends Developer Preview) |

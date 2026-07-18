@@ -38,8 +38,11 @@ Salesforce Multi-Framework (React) became generally available on June 3, 2026 an
 # 1. Enable "Salesforce Multi-Framework" in Setup, then install the plugin
 sf plugins install @salesforce/plugin-ui-bundle-dev
 
-# 2. Scaffold (reactbasic = internal app, default = manual wiring)
+# 2. Scaffold a bundle into an existing project
 sf template generate ui-bundle --name myApp --template reactbasic
+
+# Or scaffold a full generated internal/external project when listed by your CLI
+sf template generate project --name myPortal --template reactexternalapp --api-version 67.0
 
 # 3. Develop locally
 cd force-app/main/default/uiBundles/myApp && npm install
@@ -54,16 +57,16 @@ sf project deploy start \
   --target-org TARGET
 ```
 
-Internal apps require `applications/<AppName>.app-meta.xml` with `<uiBundle>myApp</uiBundle>`, deployed on **API v67.0+** and granted to users via `SetupEntityAccess`. Older Beta docs may say `reactinternalapp` / `reactexternalapp` — verify with `sf template generate ui-bundle --help`.
+Internal apps require `applications/<AppName>.app-meta.xml` with `<uiBundle>c__MyApp</uiBundle>` or the generated equivalent, deployed on **API v67.0+** and granted to users via `SetupEntityAccess`. External apps require the generated Experience metadata stack, site publish, guest/auth Apex access, and deliberate public/reviewer data scoping — see [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md). Older Beta docs may say `reactinternalapp` / `reactexternalapp` in different command contexts, so verify both `sf template generate ui-bundle --help` and `sf template generate project --help`.
 
 ## Critical Rules
 
-1. Use `@salesforce/sdk-data` — never raw `fetch()` / `axios` to Salesforce.
+1. Use `@salesforce/platform-sdk` — never raw `fetch()` / `axios` to Salesforce.
 2. GraphQL UI API wraps every field in `{ value }`.
 3. `ui-bundle.json` needs `routing.fallback: "index.html"` for SPA refresh.
 4. `.uibundle-meta.xml` `target` (`CustomApplication` vs `Experience`) is binding — not hot-swappable.
 5. One styling system per component; UIBundle has a 2,500-file ceiling.
-6. Inside a React bundle, `lightning/*`, `@wire`, and most `@salesforce/*` packages are unsupported (`@salesforce/sdk-data`, ACC, and `@salesforce/ui-bundle` excepted).
+6. Inside a React bundle, `lightning/*`, `@wire`, and most `@salesforce/*` packages are unsupported (`@salesforce/platform-sdk`, ACC, and `@salesforce/ui-bundle` excepted).
 
 Full rules, workflow, and the 100-point scoring rubric live in **[SKILL.md](SKILL.md)** and **[references/](references/)**.
 

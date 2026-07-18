@@ -58,7 +58,7 @@ The authoritative documentation and reference implementations this skill is dist
 
 | Package | Purpose |
 |---|---|
-| [`@salesforce/sdk-data`](https://www.npmjs.com/package/@salesforce/sdk-data) | Data SDK (`createDataSDK`, `gql`, `NodeOfConnection`) |
+| [`@salesforce/platform-sdk`](https://www.npmjs.com/package/@salesforce/platform-sdk) | Data SDK (`createDataSDK`, `gql`, `NodeOfConnection`) |
 | [`@salesforce/agentforce-conversation-client`](https://www.npmjs.com/package/@salesforce/agentforce-conversation-client) | ACC widget for embedding chat |
 | [`@salesforce/vite-plugin-ui-bundle`](https://www.npmjs.com/package/@salesforce/vite-plugin-ui-bundle) | Vite dev server integration |
 | [`@salesforce/ui-bundle`](https://www.npmjs.com/package/@salesforce/ui-bundle) | Helper functions for the SDK |
@@ -69,7 +69,7 @@ The authoritative documentation and reference implementations this skill is dist
 
 This skill condenses the docs and adds opinionated patterns from the recipe repo. Defer to the linked official sources when:
 
-- A new release changes the API surface (versions of `@salesforce/sdk-data`, ACC, the Vite plugin)
+- A new release changes the API surface (versions of `@salesforce/platform-sdk`, ACC, the Vite plugin)
 - You hit a specific error message you can't find in [troubleshooting.md](troubleshooting.md)
 - The exact SDK option shape (e.g. `createAccWidget` parameters) matters for the bug you're fixing
 - You need to verify a limitation hasn't changed (English-only, can't disable, etc.)

@@ -23,7 +23,7 @@ Total: **100 points** across 6 categories. Use this to grade an app or PR.
 | API version managed at project/deploy layer | 2 | `sfdx-project.json` matches target org; no unsupported `apiVersion` in `ui-bundle.json` |
 | Two distinct `package.json` files (root + bundle) | 2 | No accidental merge or duplicate dep declarations |
 | Path aliases configured in **both** `vite.config.ts` and `tsconfig.json` | 2 | Aliases match between the two |
-| External app: `digitalExperiences/sfdc_cms_site/content.json` correct | 3 | `appContainer: true`, valid `appSpace` |
+| External app: `digitalExperiences/site/<SiteName>/sfdc_cms__site/<SiteName>/content.json` correct | 3 | `contentBody.appContainer: true`, valid `contentBody.appSpace` |
 | Build artifacts under `outputDir` count < 2,500 | 2 | Source maps disabled or filtered for production |
 
 ## Routing & Hosting (15 points)
@@ -40,7 +40,7 @@ Total: **100 points** across 6 categories. Use this to grade an app or PR.
 
 | Item | Points | What earns full credit |
 |---|---|---|
-| Uses `@salesforce/sdk-data` exclusively for Salesforce calls | 5 | No raw `fetch` / `axios` to Salesforce endpoints |
+| Uses `@salesforce/platform-sdk` exclusively for Salesforce calls | 5 | No raw `fetch` / `axios` to Salesforce endpoints |
 | Optional chaining on SDK methods | 2 | `sdk.graphql?.()`, `sdk.fetch?.()` |
 | GraphQL preferred over REST where possible | 3 | UI API GraphQL for record reads/writes |
 | `{ value }` field shape respected | 3 | Fields read as `record.X.value` |

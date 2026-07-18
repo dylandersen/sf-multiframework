@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 
 const QUERY = gql`
   query SingleAccount {

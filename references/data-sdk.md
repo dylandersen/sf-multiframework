@@ -1,6 +1,6 @@
-# Data SDK (`@salesforce/sdk-data`)
+# Data SDK (`@salesforce/platform-sdk`)
 
-The Data SDK is the **only** sanctioned way to call Salesforce APIs from a React UI bundle. It abstracts authentication, CSRF token management, and base-path resolution across surfaces (Lightning Experience, Experience Cloud sites, the local Vite dev server).
+The Data SDK is the **only** sanctioned way to call Salesforce APIs from a React UI bundle. In current generated templates it is exported from `@salesforce/platform-sdk`. Older docs and examples may refer to the same concepts through `@salesforce/sdk-data`; prefer the package/import shape emitted by your installed Salesforce CLI template. It abstracts authentication, CSRF token management, and base-path resolution across surfaces (Lightning Experience, Experience Cloud sites, the local Vite dev server).
 
 > Never call `fetch()` or `axios` directly to a Salesforce endpoint from a React UI bundle.
 
@@ -26,7 +26,7 @@ The Data SDK is the **only** sanctioned way to call Salesforce APIs from a React
 ## `createDataSDK(options?)`
 
 ```ts
-import { createDataSDK } from "@salesforce/sdk-data";
+import { createDataSDK } from "@salesforce/platform-sdk";
 
 const sdk = await createDataSDK({
   surface: "webapp",
@@ -68,7 +68,7 @@ GraphQL is the **preferred** path for record reads and writes.
 #### Inline with `gql` (simple)
 
 ```ts
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 
 const QUERY = gql`
   query SingleAccount {
@@ -128,7 +128,7 @@ This is **Salesforce-specific**. Standard GraphQL doesn't wrap fields. Comment t
 ### `NodeOfConnection<T>`
 
 ```ts
-import type { NodeOfConnection } from "@salesforce/sdk-data";
+import type { NodeOfConnection } from "@salesforce/platform-sdk";
 import type { ListAccountsQuery } from "../graphql-operations-types";
 
 type AccountNode = NodeOfConnection<
@@ -217,8 +217,8 @@ The `multiframework-recipes` repo uses a thin wrapper:
 
 ```ts
 // src/api/graphqlClient.ts
-import { createDataSDK } from "@salesforce/sdk-data";
-export { gql } from "@salesforce/sdk-data";
+import { createDataSDK } from "@salesforce/platform-sdk";
+export { gql } from "@salesforce/platform-sdk";
 
 export async function executeGraphQL<TData, TVars = Record<string, unknown>>({
   query,

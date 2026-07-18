@@ -53,7 +53,7 @@ The `<target>` element in `.uibundle-meta.xml` accepts:
 |---|---|
 | Standard web APIs (`fetch` to *non-Salesforce* endpoints, `URL`, etc.) | `lightning/*` modules, Lightning base components |
 | Any npm package | `@wire` decorators |
-| `@salesforce/sdk-data` (Data SDK) | Most other `@salesforce/*` scoped modules |
+| `@salesforce/platform-sdk` (Data SDK) | Most other `@salesforce/*` scoped modules |
 | `@salesforce/agentforce-conversation-client` (ACC) | Direct `axios` / `fetch` to Salesforce endpoints |
 | `@salesforce/ui-bundle` helpers | |
 | `@salesforce/vite-plugin-ui-bundle` (dev only) | |

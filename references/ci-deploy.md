@@ -276,7 +276,7 @@ The reference repo uses Husky + lint-staged:
 | `isEnabled invalid at this location in type UIBundle` | Wrong field name in `.uibundle-meta.xml` | Use `<isActive>true</isActive>` and include `<version>` |
 | `Metadata API response: Required field 'masterLabel' missing` | `.uibundle-meta.xml` missing fields | Ensure `<masterLabel>`, `<isActive>`, `<version>` |
 | `Insufficient access rights on cross-reference id` | Running user lacks permset to deploy UIBundle | Grant the deploy user `ModifyAllData` or the right system permission |
-| Deploy succeeds but app never appears | Missing `SetupEntityAccess`, wrong `target` in `.uibundle-meta.xml`, or Experience site missing `appContainer: true` | Confirm `CustomApplication` vs `Experience`, grant app access, and check `digitalExperiences/.../content.json` |
+| Deploy succeeds but app never appears | Missing `SetupEntityAccess`, wrong `target` in `.uibundle-meta.xml`, or Experience site missing `contentBody.appContainer: true` / valid `contentBody.appSpace` | Confirm `CustomApplication` vs `Experience`, grant app access, and check generated `digitalExperiences/.../content.json` |
 | HTTP 400 `Could not determine handler` | Internal bundle deployed without `applications/<AppName>.app-meta.xml` | Deploy the companion CustomApplication metadata with `<uiBundle>` |
 | `sf template generate ui-bundle` not recognized | Plugin missing | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
 | `UIBundleSettings` feature not enabled on scratch org | `webAppOptIn` not set | Add `"UIBundleSettings": { "webAppOptIn": true }` to scratch def |

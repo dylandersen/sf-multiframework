@@ -10,7 +10,8 @@ sf plugins install @salesforce/plugin-ui-bundle-dev
 
 This plugin provides:
 
-- `sf template generate ui-bundle` — scaffolding
+- `sf template generate ui-bundle` — add a UI Bundle to an existing project
+- `sf template generate project` — in some CLI/plugin builds, scaffold full React internal/external project shapes
 - Runtime support used by `npm run dev` for the Vite plugin
 
 ## Scaffolding
@@ -31,7 +32,23 @@ Check the installed plugin before relying on template names:
 sf template generate ui-bundle --help
 ```
 
-Older Beta docs may mention `reactinternalapp` / `reactexternalapp`; current Summer '26 plugin builds expose `reactbasic` and `default`.
+Older Beta docs may mention `reactinternalapp` / `reactexternalapp` as UI Bundle templates. In current CLI builds observed during the Community Resilience Grants demo, `sf template generate ui-bundle` exposed `reactbasic` and `default`, while `sf template generate project --help` exposed fuller `reactinternalapp` / `reactexternalapp` project templates.
+
+### Generate a full internal or external project scaffold
+
+```bash
+sf template generate project \
+  --name myInternalApp \
+  --template reactinternalapp \
+  --api-version 67.0
+
+sf template generate project \
+  --name myExternalApp \
+  --template reactexternalapp \
+  --api-version 67.0
+```
+
+Use the project-template path when you want generated companion metadata and site scaffolding as a starting point. Use the UI Bundle-template path when you are adding a bundle to an existing SFDX project.
 
 ## Local development
 
@@ -133,13 +150,13 @@ sf data import tree --plan ./data/data-plan.json --target-org TARGET_ORG
 | Symptom | Cause | Fix |
 |---|---|---|
 | `sf template generate ui-bundle` not recognized | Plugin missing | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
-| Template name `reactinternalapp` not recognized | Stale Beta template name | Use `reactbasic` or `default`, or check `sf template generate ui-bundle --help` |
+| Template name `reactinternalapp` not recognized under `ui-bundle` | Template belongs to project generation in your CLI, or the installed plugin changed | Check both `sf template generate ui-bundle --help` and `sf template generate project --help` |
 | `npm run graphql:schema` fails with auth error | No authorized org in this shell | `sf org login web -a alias` and re-run |
 | Deploy fails with file-count error | UIBundle ≥ 2,500 files | Disable source maps, prune `dist/` |
 | Deploy fails with `Invalid Target value 'AppLauncher'` | Stale Beta target | Use `<target>CustomApplication</target>` |
 | Deploy fails with `Property 'uiBundle' not valid in version 66.0` | API version too low | Set `sourceApiVersion` to `67.0` or higher |
 | Deploy succeeds but app missing from App Launcher | Missing `SetupEntityAccess`, `<isActive>` is `false`, or `<target>` mismatch | Grant app access; set `isActive` true; confirm target |
-| External app deploys but site is empty | Forgot to deploy `digitalExperiences`, `networks`, or `sites` | Re-deploy with all four folders |
+| External app deploys but site is empty | Forgot to deploy `digitalExperiences`, `networks`, or `sites`, or `contentBody.appContainer/appSpace` is wrong | Re-deploy with all four folders and verify generated `content.json` shape |
 | Vite dev server data calls 401 | Org authorization expired | `sf org login web -a alias` |
 | Build OK locally but deploy fails | `outputDir` in `ui-bundle.json` doesn't match where the build emits | Align `outputDir` with `vite.config.ts` `build.outDir` |
 

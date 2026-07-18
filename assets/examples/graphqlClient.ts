@@ -11,8 +11,8 @@
  *   - Permissive  — only fail when no data at all (mutations)
  */
 
-import { createDataSDK } from "@salesforce/sdk-data";
-export { gql } from "@salesforce/sdk-data";
+import { createDataSDK } from "@salesforce/platform-sdk";
+export { gql } from "@salesforce/platform-sdk";
 
 let sdkPromise: ReturnType<typeof createDataSDK> | null = null;
 

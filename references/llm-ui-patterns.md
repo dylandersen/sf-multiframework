@@ -69,7 +69,7 @@ React side — thin `post()` wrapper, optional chaining on the SDK:
 
 ```ts
 // src/lib/aiSurface.ts
-import { createDataSDK } from "@salesforce/sdk-data";
+import { createDataSDK } from "@salesforce/platform-sdk";
 
 const REST_PATH = "/services/apexrest/myAiSurface";
 

@@ -62,7 +62,7 @@ Exception: a later recipe in a category may reference a pattern taught earlier (
 
 // 1. Imports
 import { useEffect, useState } from "react";
-import { createDataSDK, gql } from "@salesforce/sdk-data";
+import { createDataSDK, gql } from "@salesforce/platform-sdk";
 
 // 2. GraphQL query (inline, not imported)
 const QUERY = gql`

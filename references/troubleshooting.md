@@ -94,9 +94,14 @@ Direct navigation to raw `/lwr/application/...` paths on the Lightning domain ca
 
 | Symptom | Likely cause | First check |
 |---|---|---|
-| Site shows but app doesn't render | `appContainer` or `appSpace` wrong in `content.json` | `appContainer: true`; `appSpace: "<NamespacePrefix>__<DeveloperName>"` (or `c__<DeveloperName>`) |
+| Site shows but app doesn't render | `contentBody.appContainer` or `contentBody.appSpace` wrong in `content.json` | `contentBody.appContainer: true`; `contentBody.appSpace: "<NamespacePrefix>__<DeveloperName>"` (or `c__<DeveloperName>`) |
 | Site URL 404s | `networks/` or `sites/` not deployed | Deploy all four metadata folders together |
-| User can't log in | Missing Customer / Partner Community license | Provision the right license type |
+| Public page loads but shows sample fallback and API `403` | Guest profile lacks Apex class access to the public REST endpoint | Grant guest profile access to the curated Apex endpoint only; avoid broad guest object access |
+| Public board shows assigned/in-review data | Publication filter is too broad | Filter public records on final publication semantics, such as approved/awarded state, not only a visibility flag |
+| User can't log in | Missing Customer / Partner Community license, cloned external profile not a site member, or guest lacks login Apex access | Clone a standard external profile into an app-specific profile, assign users to the clone, add the cloned profile to `networkMemberGroups`, and grant guest access to login/forgot-password Apex classes |
+| External user creation fails: `portal account owner must have a role` | Contact Account owner has no UserRole | Create/assign an internal role to the account owner before creating the portal user |
+| External user creation fails with standard external profile message | Digital Experiences setting for standard external profile user creation/login is disabled while using/cloning a standard external profile | Enable the setting represented by `CommunitiesSettings.enableOotbProfExtUserOpsEnable`, then assign users to a cloned app-specific profile |
+| Reviewer logs in but sees no assignments | User is linked to Contact, but record sharing gives no read access and user-mode queries return zero rows | Add sharing/Apex managed sharing, or use a curated Apex façade scoped by `UserInfo.getUserId()` → `User.ContactId` |
 | Trying to edit site in Experience Builder | Not supported for React-app sites | Skip Builder; edit via metadata |
 
 ## Generic recovery checklist
@@ -111,8 +116,9 @@ When something is broken and you're not sure where:
 6. Did a second deploy report source-tracking conflicts immediately after a successful create? If yes, and the org changes are your just-created bundle, redeploy the local bundle with `--ignore-conflicts`.
 7. For ACC: re-walk the [acc-integration.md](acc-integration.md) checklist top to bottom.
 8. For internal apps: confirm `applications/<AppName>.app-meta.xml` deployed and `AppMenuItem.IsAccessible` is true for the test user.
-9. For external apps: confirm all four metadata folders deployed.
-10. Compare against the [`multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) reference repo for the exact pattern you're trying to use.
+9. For external apps: confirm all four metadata folders deployed and the site is published.
+10. For public/reviewer Experience routes: walk [experience-cloud-runbook.md](experience-cloud-runbook.md), especially guest Apex access, profile site membership, Contact-linked users, and sharing-vs-façade decisions.
+11. Compare against the [`multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) reference repo for the exact pattern you're trying to use.
 
 ## Reporting bugs to Salesforce
 
@@ -120,6 +126,6 @@ This feature still changes quickly. Real issues exist beyond what's listed here.
 
 - Include org type (sandbox / scratch), org language, API version
 - Include `sf --version` and `node -v`
-- Include `package.json` of the bundle (versions of `@salesforce/sdk-data`, `@salesforce/agentforce-conversation-client`)
+- Include `package.json` of the bundle (versions of `@salesforce/platform-sdk`, `@salesforce/agentforce-conversation-client`)
 - Include exact `ui-bundle.json` and `<app>.uibundle-meta.xml`
 - Reproduce against `multiframework-recipes` if possible to isolate

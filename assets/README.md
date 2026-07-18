@@ -11,7 +11,7 @@ Drop-in metadata + config files for a Multi-Framework UI bundle.
 | `myApp.uibundle-meta.xml` | UIBundle metadata. Rename file to match your `--name`. Update `<masterLabel>` and `<target>`. |
 | `MyApp.app-meta.xml` | Companion `CustomApplication` metadata for internal App Launcher apps. Update `<label>` and `<uiBundle>`. |
 | `ui-bundle.json` | Runtime configuration with SPA fallback. Keep top-level keys to `outputDir`, `routing`, and `headers`. |
-| `external-content.json` | `digitalExperiences/sfdc_cms_site/content.json` for external (`Experience`-target) apps. Update `appSpace` to `c__<DeveloperName>` (or `<Namespace>__<DeveloperName>`). |
+| `external-content.json` | Current generated `digitalExperiences/site/<SiteName>/sfdc_cms__site/<SiteName>/content.json` shape for external (`Experience`-target) apps. Update `contentBody.appSpace` to `c__<DeveloperName>` (or `<Namespace>__<DeveloperName>`). |
 | `vite.config.ts` | Minimal Vite config with `@salesforce/vite-plugin-ui-bundle` and path aliases. |
 | `codegen.yml` | GraphQL codegen config with full UIAPI scalar mappings. Drop into the bundle root. |
 

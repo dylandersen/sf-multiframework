@@ -240,7 +240,7 @@ sf template generate ui-bundle --name myApp --template default
 sf template generate ui-bundle --help
 ```
 
-Templates: [references/templates.md](references/templates.md). Project layout: [references/project-structure.md](references/project-structure.md).
+Templates: [references/templates.md](references/templates.md). Project layout: [references/project-structure.md](references/project-structure.md). External `Experience` apps (public + authenticated routes, guest Apex access, external-user provisioning, sharing vs. Apex façade): [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md).
 
 ### Phase 3 — Local development
 
@@ -417,7 +417,8 @@ Workspace-style apps (left nav · main · right inspector) share a small set of 
 | Codegen produces no types | `schema.graphql` missing — never ran `npm run graphql:schema` | [references/graphql-workflow.md](references/graphql-workflow.md) |
 | ACC FAB never appears | Trusted Domains not registered, or "Require first-party Salesforce cookies" still on | [references/acc-integration.md](references/acc-integration.md) |
 | ACC loads but disconnects on navigation | cookie policy / iframe origin mismatch | [references/acc-integration.md](references/acc-integration.md) |
-| External app deploys but never appears in Digital Experiences | `appContainer: true` or `appSpace` not set, or namespace prefix wrong | [references/templates.md](references/templates.md) |
+| External app deploys but never appears in Digital Experiences | `contentBody.appContainer: true` or `contentBody.appSpace` not set, namespace prefix wrong, or site not published | [references/templates.md](references/templates.md), [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md) |
+| External app: public page shows fallback + `403`, login POST returns Apex `403`, or reviewer sees no records | guest/external-user Apex access or record-sharing gaps on the Experience site | [references/experience-cloud-runbook.md](references/experience-cloud-runbook.md), [references/permissions-csp.md](references/permissions-csp.md) |
 | Mutation succeeds but read-back errors | UI API mutation return shape can't include some fields — switch to Permissive error strategy | [references/error-handling.md](references/error-handling.md) |
 | UI shows stale data after a create/update/delete | mutations don't touch the cache; call `QueryResult.refresh()`, re-query, or query with `cacheControl: "no-cache"` | [references/graphql-workflow.md](references/graphql-workflow.md), [references/data-sdk.md](references/data-sdk.md) |
 | Query throws `DataNotFoundError` | `cacheControl: "only-if-cached"` used with an empty cache (cache miss) — data was never fetched | fetch it first, or use a networked cache mode · [references/data-sdk.md](references/data-sdk.md) |

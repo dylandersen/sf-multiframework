@@ -41,11 +41,17 @@ Run through this list before authoring or fixing a Multi-Framework app. Each ite
 - [ ] At least one site exists (placeholder is fine — no template needed)
 - [ ] Customer/Partner Community user licenses available
 - [ ] `digitalExperienceConfigs/` deployed
-- [ ] `digitalExperiences/sfdc_cms_site/` deployed with `content.json` having:
-  - `appContainer: true`
-  - `appSpace: "<NamespacePrefix>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace)
+- [ ] `digitalExperiences/site/<SiteName>/sfdc_cms__site/<SiteName>/content.json` deployed with:
+  - `contentBody.appContainer: true`
+  - `contentBody.appSpace: "<NamespacePrefix>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace)
 - [ ] `networks/` and `sites/` deployed
+- [ ] Site is published after deploy (`sf community publish --name "<ExperienceName>"`)
+- [ ] You verify the actual React app path, not only the underlying `...vforcesite` URL returned by publish
+- [ ] If the app has a public Apex REST route, the guest profile has Apex class access to the curated endpoint and no unnecessary object permissions
+- [ ] If the app has login/forgot-password routes, the guest profile has Apex class access to the auth endpoints used by the template
+- [ ] If the app has authenticated external users, a standard external profile has been cloned into an app-specific profile, the cloned profile is a site member, the Contact is linked, the Account owner has a role, and the needed permission set is assigned
 - [ ] You **don't** try to edit the React app site in Experience Builder (not supported)
+- [ ] Full external-app playbook followed: [experience-cloud-runbook.md](experience-cloud-runbook.md)
 
 ## Agentforce Conversation Client (only if embedding ACC)
 

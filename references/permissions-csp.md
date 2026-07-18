@@ -7,6 +7,16 @@ Two separate gates control what a UIBundle app can do in an org:
 
 Both fail silently in different ways. Plan them upfront.
 
+## Experience Cloud public and reviewer access
+
+External React apps often combine public and authenticated routes. Decide early whether those routes rely on platform sharing or a curated Apex façade.
+
+**Public façade pattern:** give the Experience guest profile Apex class access to the public endpoint, keep direct object access absent unless deliberately required, and select/filter only public-safe fields in Apex. This avoids broad guest data exposure while still letting the React page render real data.
+
+**Reviewer façade pattern:** authenticate the external user, derive the user's `ContactId` server-side, query only records assigned to that Contact, and validate the same scope before DML. Do not accept reviewer ContactId/UserId from the client. If you prefer `WITH USER_MODE` reads, implement platform sharing or Apex managed sharing so `UserRecordAccess` matches the intended reviewer access.
+
+See [experience-cloud-runbook.md](experience-cloud-runbook.md) for the full public route, login, forgot-password, and Contact-linked reviewer provisioning checklist.
+
 ## Permission sets for UI bundles
 
 At minimum your end users need:

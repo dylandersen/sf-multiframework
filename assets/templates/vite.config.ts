@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { uiBundle } from "@salesforce/vite-plugin-ui-bundle";
+import salesforce from "@salesforce/vite-plugin-ui-bundle";
 import path from "node:path";
 
 // Minimal Vite config for a Salesforce Multi-Framework UI bundle.
@@ -8,7 +8,8 @@ import path from "node:path";
 // API calls during dev so @salesforce/platform-sdk/data works against a real org.
 
 export default defineConfig({
-  plugins: [react(), uiBundle()],
+  base: "./",
+  plugins: [react(), salesforce()],
   resolve: {
     alias: {
       "@":           path.resolve(__dirname, "src"),
@@ -21,6 +22,6 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: false
+    sourcemap: true // required for managed AppExchange review; optional for ordinary deployment
   }
 });

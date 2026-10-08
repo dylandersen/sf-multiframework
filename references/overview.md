@@ -1,141 +1,50 @@
-# Overview — Salesforce Multi-Framework
+# Overview and release scope
 
-> **Sources.** Skill built from Salesforce developer documentation (see [official-sources.md](official-sources.md)) and code patterns from [trailheadapps/multiframework-recipes](https://github.com/trailheadapps/multiframework-recipes). Skill framework adapted from **Jag Valaiyapathy's SF Skills repo** (same rubric, format, and governance conventions used across `sf-*` skills).
+Reviewed 2026-10-08. [Salesforce's overview](https://developer.salesforce.com/docs/platform/multiframework/guide)
+describes a framework-agnostic runtime with ready-to-use React and Angular
+projects. Apps run as self-contained `UIBundle` metadata in a DX project, using
+Salesforce hosting, authentication, and supported platform APIs.
 
-## What it is
-
-Salesforce Multi-Framework lets you build apps in non-Lightning UI frameworks — currently **React** — that run on the **Agentforce 360 Platform**. Apps are packaged and deployed as a `UIBundle` metadata type and hosted by the platform alongside CMS content with versioning and publication lifecycle management.
-
-When deployed, a `UIBundle` record:
-
-- declares the app's identity on the platform
-- declares which containers can host it (`CustomApplication`, Experience Cloud)
-- pulls runtime assets, images, and metadata from Salesforce CMS storage
-
-A single `UIBundle` can contain up to **2,500 files**.
-
-## Why it exists
-
-Two audiences benefit:
-
-| Audience | Benefit |
-|---|---|
-| React developers | Reach Salesforce data and authentication without learning the LWC framework |
-| Salesforce developers | Use modern bundlers (Vite), npm packages, and rich UI libraries inside the platform |
-
-The feature is positioned for **self-contained SPAs and highly customized experiences** that use Salesforce as the host and data source — *not* as a replacement for LWC for tightly-integrated platform components.
-
-## How it ships
-
-| Element | Location | Purpose |
+| Surface | Hosting and entry point | Required companion metadata |
 |---|---|---|
-| `UIBundle` metadata | `force-app/main/default/uiBundles/<app>/` | App identity & container declaration |
-| `<app>.uibundle-meta.xml` | bundle root | Metadata definition (target, isActive, version) |
-| `CustomApplication` metadata | `force-app/main/default/applications/<App>.app-meta.xml` | Internal App Launcher route registration via `<uiBundle>` |
-| `ui-bundle.json` | bundle root | Runtime configuration (output dir, routing, API version) |
-| App source | `src/`, `package.json`, etc. | The React app itself |
-| Build output | `dist/` (Vite default) | What actually gets served at runtime |
+| Internal B2E app | Own origin under `*.salesforce.app`; App Launcher and Salesforce mobile | CustomApplication referencing `c__bundleName` (or registered namespace) |
+| External B2B/B2C app | Experience Cloud site; public or authenticated site URL; also listed in App Launcher | DigitalExperience, DigitalExperienceConfig, Network, CustomSite |
+| Embedded internal bundle | Standalone app URL in a `lightning-ui-embedding` LWC wrapper | Working internal app plus wrapper and host page configuration |
 
-## What targets are supported
+A bundle can contain up to 2,500 files. `isActive` controls serving; XML `version`
+is an integer schema version, not npm/app semantic versioning. The target enables
+a container to reference the bundle; it does not create that container itself.
 
-The `<target>` element in `.uibundle-meta.xml` accepts:
+## Availability and capability boundaries
 
-| Target | Effect | Use case |
-|---|---|---|
-| `CustomApplication` | App appears in the App Launcher for authenticated users; served from the dedicated `salesforce.app` domain (its own origin, isolated by Same Origin Policy) | Internal employee apps (B2E) |
-| `Experience` | App is served by an Experience Cloud site (unchanged from Beta) | External B2B / B2C portals |
+- Hosting: eligible editions on Hyperforce, excluding Alibaba/Government Cloud;
+  internal hosting requires app domain and Edge Network. See [setup.md](setup.md).
+- React and Angular app templates, App Manager, and internal managed/unlocked 2GP
+  packaging are documented capabilities. Do not leave them in a roadmap list.
+- External app packaging is unsupported. Experience app-container sites cannot
+  be edited in Experience Builder; edit framework source and site metadata.
+- Localization is documented: labels extension minimum API 64.0; the separate
+  i18n runtime and backend minimum API 68.0. See [platform-capabilities.md](platform-capabilities.md).
+- Externally hosted UI Embedding is described as GA in its guide. **Embedding
+  internally hosted UIBundles remains Beta** and its specific page currently
+  limits this path to React. General Angular hosting support does not lift that
+  embedding limitation. See [microfrontends.md](microfrontends.md).
+- Builder Central is Beta and offers a guided React authoring experience;
+  Agentforce Vibes and other coding tools are optional authoring choices.
 
-`AppLauncher` was the Beta target name and is deprecated. Use `CustomApplication` on API v67.0+.
+The old skill's exact GA announcement date and universal org/language claims
+were not substantiated by the current guide. Use feature-specific evidence,
+org settings, and installed package versions instead of extrapolating one status
+to every SDK or distribution surface.
 
-## What you can use inside the React app
+## Security and framework choice
 
-| Allowed | Not allowed |
-|---|---|
-| Standard web APIs (`fetch` to *non-Salesforce* endpoints, `URL`, etc.) | `lightning/*` modules, Lightning base components |
-| Any npm package | `@wire` decorators |
-| `@salesforce/platform-sdk/data` (Data SDK) | Most other `@salesforce/*` scoped modules |
-| `@salesforce/agentforce-conversation-client` (ACC) | Direct `axios` / `fetch` to Salesforce endpoints |
-| `@salesforce/ui-bundle` helpers | |
-| `@salesforce/vite-plugin-ui-bundle` (dev only) | |
+The app origin is isolated from Lightning DOM, storage, and session cookies.
+Supported UI API operations enforce object/field access, sharing, and validation;
+SDK transport manages auth/CSRF. Custom Apex REST needs its own permission checks.
+Embedding adds a controlled bridge rather than direct parent DOM access.
 
-## Availability
-
-**Generally available since July 16, 2026.** Multi-Framework runs in **all org editions — Developer Edition, Sandbox, and Production** on the **Summer '26 release or later**, with **no opt-in required**; scratch orgs are supported for development. Employee-facing apps run on the dedicated **`salesforce.app`** domain, and the Data SDK is GA as **`@salesforce/platform-sdk`**.
-
-## Current limitations
-
-- **Default language must be `en_US`** — known issue with non-English orgs.
-- **Once enabled, cannot be disabled** in an org.
-- **One UI bundle per metadata push** is the safe pattern; multi-app deploys can collide.
-- **No Experience Builder editing** for sites attached to React apps.
-- **Currently React only** — Angular is on the roadmap.
-
-## Roadmap (not yet GA)
-
-- **Microfrontends** — embed externally hosted React components in Lightning alongside LWCs, passing events between them.
-- **Angular support** — additional frameworks beyond React.
-- **Localization** — languages, locales, and timezones via Translation Workbench or metadata.
-- **Managed packages** — build, test, distribute, and deploy Multi-Framework apps as managed packages.
-- **App management** — view/manage basic app details (name, description, URL) from App Manager.
-
-## Related platform features
-
-| Feature | Relationship |
-|---|---|
-| **Agentforce Vibes** | AI-assisted authoring inside VS Code; uses skills + rules to scaffold and edit React apps + GraphQL |
-| **Agentforce Conversation Client (ACC)** | Lightning Out 2.0 LWCI you can embed inside the React app for chat with Employee Agents |
-| **Salesforce CMS** | Storage layer for runtime assets and content used inside React apps |
-| **Data 360 / Hybrid Search** | Powers the `search_electronic_media` ACC tool when configured |
-
-## Decision trees
-
-### "Should I use React (Multi-Framework) or LWC?"
-
-Pick LWC when:
-- You're building reusable platform components, especially for Lightning Experience or Salesforce mobile.
-- You need automatic SLDS, Lightning Data Service, or `@wire` integrations.
-- The component will be embedded in record pages, list views, or App Builder.
-
-Pick React when:
-- You're building a self-contained SPA or a custom-branded portal.
-- You need a specific React library (charting, mapping, code editor, etc.).
-- You want a non-Salesforce UI aesthetic (Tailwind, custom design system).
-
-See [lwc-vs-react.md](lwc-vs-react.md) for a structured comparison.
-
-### "Internal or external app?"
-
-Pick `CustomApplication` (internal) when:
-- Users are employees authenticated via Salesforce.
-- The app appears alongside other Lightning apps in the App Launcher.
-- You can deploy `applications/<AppName>.app-meta.xml` and grant app access with `SetupEntityAccess`.
-
-Pick `Experience` (external) when:
-- Users are partners or customers (B2B / B2C).
-- You need a public-facing URL via an Experience Cloud site.
-- You're prepared to maintain `digitalExperienceConfigs`, `digitalExperiences`, `networks`, and `sites` metadata alongside the bundle.
-
-## Workflow at a glance
-
-```
-Setup org (one-time)
-  ├─ Enable Multi-Framework
-  ├─ Configure My Domain / Trusted Domains (if using ACC)
-  └─ Authorize org via sf CLI
-
-Scaffold project
-  └─ sf template generate ui-bundle --template reactbasic|default
-
-Develop locally
-  ├─ npm install
-  ├─ npm run graphql:schema   (introspect org)
-  ├─ npm run graphql:codegen  (generate types)
-  └─ npm run dev              (Vite + @salesforce/vite-plugin-ui-bundle)
-
-Build & deploy
-  ├─ npm run build            (→ dist/)
-  └─ sf project deploy start --source-dir <bundle> --source-dir applications/
-
-Verify
-  └─ App Launcher / Digital Experiences / hard-refresh deep links
-```
+Choose LWC for reusable native platform components and Lightning services.
+Choose React or Angular for a custom SPA, portal, or reuse of framework expertise.
+See [lwc-vs-react.md](lwc-vs-react.md). Standard npm packages and documented SDK
+entry points are supported; LWC virtual modules and `@wire` are not.

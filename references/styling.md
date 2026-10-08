@@ -1,5 +1,7 @@
 # Styling React Apps
 
+> Scope: React styling examples and recipe preferences. Preserve the user's design system; these do not require Angular apps or existing production components to adopt React/shadcn or a recipe-only styling boundary.
+
 React UI bundles **don't have access to Lightning base components or `lightning/*` modules**, so the automatic SLDS styling LWCs get isn't available. You have three viable approaches; pick one **per component** (mixing inside one component is the most common review failure).
 
 ## The three approaches

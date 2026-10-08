@@ -3,5 +3,5 @@
     <isActive>true</isActive>
     <masterLabel>My App</masterLabel>
     <target>CustomApplication</target>
-    <version>1.0.0</version>
+    <version>1</version>
 </UIBundle>

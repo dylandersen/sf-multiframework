@@ -1,5 +1,7 @@
 # Layout Patterns for Multi-Framework Apps
 
+> Scope: Optional React/CSS workspace patterns, not Salesforce platform requirements. Standalone app viewport and embedded host sizing differ; inspect the actual host rather than assuming Lightning chrome offsets.
+
 Patterns that have proven robust in production-style React UI bundles
 (workspace apps with a left nav, a center table, and a right inspector).
 These are framework-agnostic React/CSS techniques, but every one has a
@@ -154,37 +156,25 @@ once the user releases.
 
 ## 4) `--top-offset` for the Salesforce frame chrome
 
-Internal `CustomApplication` apps launched from App Launcher render inside a Lightning frame with the standard
-Salesforce blue header bar above your shell. If you use `height: 100vh` on
-your app shell, the header eats the bottom of your content.
+Salesforce-hosted bundles run on an isolated app origin; standalone apps,
+local preview, and embedded apps can have different viewport constraints. Do
+not infer host chrome from a `/lightning/` pathname or assume a fixed header
+height. Start with the viewport/container the app actually receives. When a
+particular host includes chrome inside that viewport, measure its allocation
+or use the supported host sizing contract before applying an offset.
 
 ```css
-:root {
-  /* Default — Experience Cloud and Vite dev have no chrome. */
-  --top-offset: 0;
-}
-
-/* When running inside Lightning Experience, the host sets a wrapper class
-   on <body> (in some versions) or you can detect via window.location. */
-body.in-lightning-experience {
-  --top-offset: 56px; /* current chrome height; verify in your org */
-}
-
+:root { --top-offset: 0px; }
 .app-shell {
-  height: calc(100vh - var(--top-offset));
+  height: calc(100dvh - var(--top-offset));
+  min-height: 0;
 }
 ```
 
-Detect at boot — use the **base path** the Data SDK exposes, not user
-agent sniffing:
-
-```ts
-// Lightning Experience serves the app under /lightning/n/<DeveloperName>
-// Experience Cloud serves it under the site's published path
-if (window.location.pathname.startsWith("/lightning/")) {
-  document.body.classList.add("in-lightning-experience");
-}
-```
+Set `--top-offset` only for a verified host layout; do not subtract a header
+that is already outside the iframe viewport. For embedding sizing and optional
+View SDK methods, see [microfrontends.md](microfrontends.md) and
+[platform-capabilities.md](platform-capabilities.md).
 
 If you embed the **Agentforce Conversation Client floating mode**, ACC adds
 its own bottom-right floating chrome — leave bottom padding on your inspector

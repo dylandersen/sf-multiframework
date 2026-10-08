@@ -1,124 +1,59 @@
-# Configure Your Org for React Development
+# Org and development setup
 
-> Current availability: **all org editions — Developer Edition, Sandbox, and Production** (generally available July 16, 2026) on the **Summer '26 release or later**, no opt-in required; scratch orgs supported for development. Default language must be `en_US`.
+Reviewed 2026-10-08 against [Set Up Your Org](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-setup.html).
 
-## 1. Pre-flight
+## Eligibility and internal hosting
 
-- Latest **Salesforce CLI**: `sf update`
-- Latest **Salesforce Extension Pack** for VS Code (or equivalent IDE)
-- **Node.js v22+** and **npm**
-- For external apps: planned **Customer Community / Customer Community Plus** (B2C) or **Partner Community / Channel Account** (B2B) user licenses
+The documented editions are Enterprise, Performance, Unlimited, Developer, and
+Partner Developer, hosted on Hyperforce. Alibaba Cloud and Salesforce Government
+Cloud are excluded. Verify Company Information and the org release rather than
+promising support for every edition or every production/sandbox environment.
 
-## 2. Enable Multi-Framework
+Internal apps require the Salesforce app domain and Salesforce Edge Network.
+With **Customize Application**, open Setup → **Salesforce Multi-Framework Apps**.
+If **Enable Domain** is present, enable it within the user's authorized setup
+scope; otherwise the domain is already enabled. In My Domain → Routing and
+Policies, confirm Salesforce Edge Network. Most orgs have the app domain enabled
+already. The current guide does not prescribe the old irreversible React
+Development toggle or a universal English-only requirement for standalone apps.
+UI Embedding has its own English-default constraint; see [microfrontends.md](microfrontends.md).
 
-> Required permission: **Customize Application**.
-
-1. Setup → search **"Salesforce Multi-Framework"** → click **React Development with Salesforce Multi-Framework**.
-2. Click **Enable** → confirm.
-3. **Cannot be disabled** afterwards. Treat the toggle as one-way.
-
-> **Confirm support.** On the Summer '26 release or later, enabled orgs show an **"About Salesforce Multi-Framework"** message on that Setup page with the **"Enable Salesforce App Domain"** toggle on — this is how employee-facing apps get their own `salesforce.app` origin.
-
-## 3. Authorize the org
-
-```bash
-# Sandbox or production hub
-sf org login web -d -a myhuborg
-
-# Sandbox-specific (skip -d)
-sf org login web -a mysandbox
-
-# Optional: scratch org from project def
-sf org create scratch -d -f config/project-scratch-def.json -a recipes
-```
-
-For scratch orgs, **explicitly set `"language": "en_US"`** in the project def. Non-English orgs hit known issues.
-
-## 4. Install the UI Bundle CLI plugin
+Use the latest Salesforce CLI and Extension Pack, plus the generated project's
+Node engine. Current recipes use Node 22+. Authenticate the intended org with
+`sf org login web --alias ALIAS`, then set it as the project default if needed.
+Do not change the global default merely to inspect an existing app.
 
 ```bash
 sf plugins install @salesforce/plugin-ui-bundle-dev
+sf template generate project --help
+sf template generate ui-bundle --help
 ```
 
-This adds the `sf template generate ui-bundle` command and runtime helpers used by `npm run dev`.
+## External apps
 
-## 5. (External apps only) Set up Digital Experiences
+Enable Digital Experiences and verify licenses for the intended audience:
+Customer Community/Customer Community Plus for B2C; Partner Community/Channel
+Account for B2B. Generate an external project rather than creating an arbitrary
+placeholder site. Keep the generated DigitalExperience, DigitalExperienceConfig,
+Network, and CustomSite metadata. Developer orgs support only the `c` namespace
+per the current setup guide. See [templates.md](templates.md).
 
-External React apps live inside an Experience Cloud site even though you don't author the site in Experience Builder.
+## Optional ACC configuration
 
-1. Setup → confirm **Digital Experiences** is enabled.
-2. Setup → Digital Experiences → All Sites → **New** (any template — you'll back out).
-3. Click **Back to Setup** without picking a template — this just ensures the underlying dependencies exist.
-4. Confirm Customer/Partner Community user licenses are available.
+For internal Employee Agent ACC, configure an Employee Agent with topics/actions
+and enable Agentforce. In My Domain, deselect **Require first-party use of
+Salesforce cookies**. Under Session Settings → **Trusted Domains for Inline
+Frames**, add the actual app/preview origin, including the port, with iframe
+type **Lightning Out**. These settings are specific to this integration, not
+requirements for every frontend app. See [acc-integration.md](acc-integration.md).
 
-The metadata you ship later (`digitalExperienceConfigs`, `digitalExperiences/sfdc_cms_site`, `networks`, `sites`) wires the React app to the site.
+## Optional authoring integrations
 
-## 6. (Agentforce Vibes users only) MCP server setup
+Any editor or agentic coding tool can work with the standard DX/npm project.
+Agentforce Vibes is optional. For Salesforce DX MCP and Salesforce's skills
+library, see [authoring-surface.md](authoring-surface.md).
 
-If you'll use Agentforce Vibes' natural-language scaffolding:
-
-1. Setup → MCP Servers → **metadata-experts** → **Activate**.
-2. Setup → MCP Servers → **salesforce-api-context** → **Activate**.
-3. In VS Code, open the Agentforce Vibes panel.
-4. Connect to your authorized org.
-5. Confirm these MCP servers are enabled and connected:
-   - Salesforce DX MCP server
-   - Salesforce Metadata Experts MCP server
-   - Salesforce API Context MCP server
-6. Confirm all Salesforce skills and rules are enabled in the Vibes panel.
-
-If you're going to vibe-code CMS content into the app, also activate the **content-readonly** MCP server (DE / scratch only):
-
-1. Setup → CMS → toggle **Access the Content Read-Only MCP Server and Tools (Beta)**.
-2. Setup → MCP Servers → **content-readonly** → **Activate**.
-3. Add `content-readonly` as a remote server in Vibes pointing at the Server URL from the MCP detail page.
-4. Set `cmsAssetProviderOrg` to the alias of the org that holds your CMS content.
-
-For `search_electronic_media`: deploy the **CMS Base (Beta)** data kit, then create a Hybrid Search index in Data Cloud over the `Electronic Media` source object with `Description` chunked via Passage Extraction.
-
-## 7. (ACC users only) Org configuration
-
-To embed the Agentforce Conversation Client in a React app:
-
-### 7a. Enable Agentforce
-Setup → Einstein → Einstein Generative AI → Agentforce Studio → Agentforce Agents → enable **Agentforce** preference. Configure at least one Employee Agent with topics + actions.
-
-### 7b. Cookie policy
-Setup → My Domain → Routing and Policies → **uncheck** *Require first-party use of Salesforce cookies* → **Save**.
-
-This is required because the React app is on a non-Salesforce origin (including `localhost`) and the ACC iframe must persist session state across origins.
-
-### 7c. Trusted Domains for Inline Frames
-Setup → Session Settings → **Trusted Domains for Inline Frames** → **Add Domain**:
-
-- Production / preview origin (e.g. `https://app.example.com`)
-- Local dev origin (e.g. `http://localhost:5173`)
-
-Set **iFrame type** to **Lightning Out** for each.
-
-## 8. Optional — Permission Set
-
-Most starter projects ship a `recipes` permission set granting access to the bundle and any custom objects. Assign it to the running user:
-
-```bash
-sf org assign permset -n recipes
-```
-
-## 9. Smoke-test the setup
-
-```bash
-sf org open
-```
-
-Expected: org opens, App Launcher contains your app (after deploy), or Digital Experiences shows the linked site (external apps).
-
-## Common setup failures
-
-| Symptom | Cause | Fix |
-|---|---|---|
-| Feature toggle missing in Setup | Org default language ≠ `en_US`, or the release hasn't reached the org yet | Confirm language is `en_US`; the feature is available in DE, Sandbox, and Production |
-| Feature toggle visible but not clickable | User lacks **Customize Application** | Assign the System Admin profile or equivalent |
-| `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
-| Vite dev server starts but data calls 401 | Org not authorized in current shell | `sf org login web -a <alias>` |
-| ACC FAB never appears | Trusted Domains not added or cookies still restricted | Re-check steps 7b and 7c |
-| Non-English org blocks app loading | Known issue | Set org language to `en_US` (scratch) or use a different org |
+CMS authoring can use Salesforce's Content Read-Only and Content Write hosted
+MCP servers. Follow their current setup guides linked from the official org
+setup page; do not carry forward a blanket DE/scratch-only assumption or activate
+write/publish tools for a read-only task.

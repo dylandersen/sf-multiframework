@@ -1,48 +1,64 @@
-/**
- * Agentforce Conversation Client (ACC) — minimal mount.
- *
- * Prerequisites in Setup (see references/acc-integration.md):
- *   - Agentforce preference enabled, Employee Agent configured
- *   - My Domain: "Require first-party use of Salesforce cookies" UNCHECKED
- *   - Session Settings → Trusted Domains for Inline Frames includes this app's
- *     origin (prod, preview, AND http://localhost:<port>) with iFrame type Lightning Out
- *
- * Install:
- *   npm install @salesforce/agentforce-conversation-client
- *
- * NOTE: The exact `createAccWidget` option shape evolves with the package
- *       version. Always check the installed version's TypeScript declarations.
- */
+/** Employee Agent ACC mount. Supply authenticated host configuration; see acc-integration.md. */
+import { useEffect, useRef, useState } from "react";
+import { embedAgentforceClient } from "@salesforce/agentforce-conversation-client";
 
-import { useEffect, useRef } from "react";
-import { createAccWidget } from "@salesforce/agentforce-conversation-client";
+type Authentication =
+  | { salesforceOrigin: string; frontdoorUrl?: never }
+  | { frontdoorUrl: string; salesforceOrigin?: never };
 
-interface Props {
-  mode?: "floating" | "docked" | "inline";
-}
+type Props = Authentication & {
+  agentId: string;
+  agentLabel?: string;
+  mode?: "floating" | "inline";
+};
 
-export function AccChatPanel({ mode = "floating" }: Props) {
+export function AccChatPanel({
+  agentId, agentLabel, salesforceOrigin, frontdoorUrl, mode = "floating"
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const widgetRef = useRef<{ destroy: () => void } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    widgetRef.current = createAccWidget({
-      container: containerRef.current,
-      mode,
-      welcomeMessage: "How can I help today?",
-      brand: {
-        primaryColor: "#0176d3",
-        borderRadius: "0.5rem"
-      }
-    });
-
+    const container = containerRef.current;
+    if (!container) return;
+    let active = true;
+    setError(null);
+    setReady(false);
+    try {
+      embedAgentforceClient({
+        container,
+        salesforceOrigin,
+        frontdoorUrl,
+        agentforceClientConfig: {
+          agentId,
+          agentLabel,
+          renderingConfig: { mode }
+        },
+        onReady: () => {
+          if (active) setReady(true);
+        },
+        onError: () => {
+          if (active) {
+            setReady(false);
+            setError("The agent connection failed. Check the session and agent access.");
+          }
+        }
+      });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The agent could not load.");
+    }
     return () => {
-      widgetRef.current?.destroy();
-      widgetRef.current = null;
+      active = false;
+      container.replaceChildren();
     };
-  }, [mode]);
+  }, [agentId, agentLabel, salesforceOrigin, frontdoorUrl, mode]);
 
-  return <div ref={containerRef} className="acc-host" />;
+  return (
+    <>
+      {error && <p role="alert">{error}</p>}
+      {!ready && !error && <p role="status">Connecting to the agent…</p>}
+      <div ref={containerRef} style={{ width: "100%", minHeight: mode === "inline" ? 480 : undefined }} />
+    </>
+  );
 }

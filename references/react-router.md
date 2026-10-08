@@ -1,8 +1,8 @@
 # React Router 7 on Salesforce Multi-Framework
 
-Multi-Framework apps use **React Router 7**. Two things are non-obvious vs plain-web React Router:
+Current React templates/recipes use **React Router 7**; it is a project choice, not a platform mandate. Two things are non-obvious vs plain-web React Router:
 
-1. The import path changed in v7 — use `react-router`, not `react-router-dom`.
+1. Current recipes import from `react-router`; preserve compatible routing dependencies in existing apps.
 2. The platform injects a base path at runtime that the router must pick up, or deep links and navigation break inside Lightning Experience / Experience Cloud.
 
 ## Install and import
@@ -15,7 +15,7 @@ npm install react-router
 // ✅ correct — v7 consolidated everything into the main package
 import { createBrowserRouter, RouterProvider, Link, NavLink, Outlet, useNavigate, useParams, useLocation } from "react-router";
 
-// ❌ wrong — v6 pattern, missing types + outdated
+// Existing apps may use react-router-dom; check installed version/exports first.
 import { BrowserRouter } from "react-router-dom";
 ```
 
@@ -24,8 +24,8 @@ import { BrowserRouter } from "react-router-dom";
 At runtime, Salesforce mounts the app under a URL like:
 
 ```
-/lwr/application/ai/c-myApp            # Lightning Experience (internal)
-/<site>/s/c-myApp                       # Experience Cloud (external)
+/app/c__myApp                         # illustrative internal app path; copy actual launch URL
+/<site>/...                           # external path depends on the generated site/runtime
 ```
 
 The platform sets `globalThis.SFDC_ENV.basePath` so the app knows where it is mounted. The router must use that as its `basename`, otherwise:
@@ -128,7 +128,7 @@ export const routes: RouteObject[] = [
 
 ### The `handle` pattern for dynamic navbars
 
-React Router exposes each route's `handle` on `useMatches()`. Use it to drive a navbar without hardcoding the route list in two places:
+React Router exposes each route's `handle` on `useMatches()`. Use the route catalog for a full navbar; `useMatches()` exposes only active matches and can drive breadcrumbs or active-context UI. The following renders only those active entries:
 
 ```tsx
 // appLayout.tsx
@@ -138,6 +138,7 @@ interface NavHandle { showInNavigation?: boolean; label?: string }
 
 export default function AppLayout() {
   const matches = useMatches();
+  // useMatches contains active matches only, not the full navigation catalog.
   const navRoutes = matches
     .filter(m => (m.handle as NavHandle | undefined)?.showInNavigation)
     .map(m => ({ path: m.pathname, label: (m.handle as NavHandle).label ?? m.id }));
@@ -215,13 +216,13 @@ function CreateAccountForm() {
 | Symptom | Cause | Fix |
 |---|---|---|
 | 404 on hard refresh of a child route in Lightning | `ui-bundle.json` missing `fallback: "index.html"` | Add it and redeploy |
-| Navbar links resolve to `/lwr/application/ai/c-app/lwr/application/ai/c-app/read-data` | Manually prepending `SFDC_ENV.basePath` inside the app | Let `basename` handle it; use relative `to="read-data"` or `to="/read-data"` |
+| Navbar links duplicate the runtime mount prefix | Manually prepending `SFDC_ENV.basePath` inside the app | Let `basename` handle it; use relative `to="read-data"` or `to="/read-data"` |
 | Routes work locally, break inside an Experience Cloud site | `basename` defaulted to `/` instead of picking up `SFDC_ENV.basePath` | Read `SFDC_ENV.basePath` at `createBrowserRouter` time |
-| `npm run build` fails with "no exported member BrowserRouter" | Importing from `react-router-dom` | Change the import to `react-router` |
+| Router export missing | Installed dependency/export mismatch | Inspect package versions and use supported exports |
 | `useParams()` returns `{}` | Route defined without `:paramName` | Match the path pattern to the param key |
 
 ## What NOT to use
 
-- `react-router-dom` — deprecated in favor of v7's consolidated `react-router`
-- Hash routing (`createHashRouter`) — breaks Lightning Out deep-linking
+- Do not migrate a working `react-router-dom` setup merely to match a recipe; verify compatibility first.
+- Prefer the generated browser-router/basename path; choose hash routing only if its URL behavior meets the app requirements.
 - A custom router layer on top of React Router — the platform already solves base-path and hard-refresh via `ui-bundle.json` + `basename`

@@ -1,170 +1,67 @@
-# CLI Guide
+# CLI and preview workflow
 
-> Prefer **Salesforce DX MCP** for deployments when available (`mcp_Salesforce_DX_deploy_metadata`, `mcp_Salesforce_DX_get_username`). The CLI commands below are the documented fallback and what most people run locally.
-
-## Required plugins
+Primary references: [templates](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-generate-app.html),
+[preview](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-preview.html),
+[deployment](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-deploy.html).
+Reviewed 2026-10-08. Use installed `--help` for exact flags.
 
 ```bash
 sf plugins install @salesforce/plugin-ui-bundle-dev
-```
-
-This plugin provides:
-
-- `sf template generate ui-bundle` — add a UI Bundle to an existing project
-- `sf template generate project` — in some CLI/plugin builds, scaffold full React internal/external project shapes
-- Runtime support used by `npm run dev` for the Vite plugin
-
-## Scaffolding
-
-### Add a UI bundle to an existing project
-
-```bash
-sf template generate ui-bundle \
-  --name myApp \
-  --template reactbasic     # or default
-```
-
-The `--name` becomes the bundle directory name and the metadata API name. Stick with a developer-name-friendly identifier (no spaces, no leading digits).
-
-Check the installed plugin before relying on template names:
-
-```bash
+sf template generate project --help
 sf template generate ui-bundle --help
 ```
 
-Older Beta docs may mention `reactinternalapp` / `reactexternalapp` as UI Bundle templates. In current CLI builds observed during the Community Resilience Grants demo, `sf template generate ui-bundle` exposed `reactbasic` and `default`, while `sf template generate project --help` exposed fuller `reactinternalapp` / `reactexternalapp` project templates.
+Use full project templates for internal/external apps; bundle templates for an
+existing DX project. See [templates.md](templates.md) for React and Angular names.
 
-### Generate a full internal or external project scaffold
-
-```bash
-sf template generate project \
-  --name myInternalApp \
-  --template reactinternalapp \
-  --api-version 67.0
-
-sf template generate project \
-  --name myExternalApp \
-  --template reactexternalapp \
-  --api-version 67.0
-```
-
-Use the project-template path when you want generated companion metadata and site scaffolding as a starting point. Use the UI Bundle-template path when you are adding a bundle to an existing SFDX project.
-
-## Local development
+## Develop in the bundle
 
 ```bash
-cd force-app/main/default/uiBundles/myApp
+cd force-app/main/default/uiBundles/MyApp
 npm install
-npm run graphql:schema     # Introspects the connected org → schema.graphql
-npm run graphql:codegen    # Reads codegen.yml → src/api/graphql-operations-types.ts
-npm run dev                # Vite dev server (default http://localhost:5173)
+npm run graphql:schema
+npm run graphql:codegen
+npm run dev
 ```
 
-Notes:
+The schema/codegen commands depend on the generated project's scripts; inspect
+`package.json`. Schema retrieval needs an authorized org. Do not run a missing
+script or assume every Angular project has the React codegen setup.
 
-- `graphql:schema` requires an **already-authorized org**. Make sure `sf org list` shows your target.
-- The Vite plugin (`@salesforce/vite-plugin-ui-bundle`) proxies Salesforce API calls during dev so the SDK works against the real org.
-- Add `http://localhost:<port>` to **Trusted Domains for Inline Frames** if you're testing ACC locally.
+`npm run dev` is the standard template entry point for both frameworks. The
+preview guide also documents `npx ng serve` for Angular. Preserve the generated
+middleware/proxy path for real data. Set `SF_UIBUNDLE_PORT=4200 npm run dev` to
+choose another port. ACC needs that exact local origin trusted as Lightning Out.
 
-## Build
+Live Preview in VS Code uses **SFDX: Open in Live Preview**, with the Extension
+Pack, UI Bundle plugin, and an authorized org. It works without requiring Vibes.
 
-```bash
-npm run build
-```
+## Build and deploy
 
-Typically `tsc --noEmit && vite build`. Output lands in the directory referenced by `ui-bundle.json` `outputDir` (Vite default `dist/`). Avoid `tsc -b` unless project references are intentionally configured, because it can emit TypeScript build artifacts into the deployable bundle root.
-
-`npm run lint` and `npm run build` should both pass before you deploy.
-
-## Deploy (CLI)
-
-```bash
-# From the project root
-sf project deploy start \
-  --source-dir force-app/main/default/uiBundles/myApp \
-  --source-dir force-app/main/default/applications \
-  --target-org TARGET_ORG
-```
-
-For internal apps, the `applications/` metadata is the `CustomApplication` route registration. Without it, the bundle can deploy but fail at runtime with HTTP 400.
-
-For external apps, deploy the companion folders **in the same call**:
+Run the app's build script inside its bundle and confirm the `outputDir` assets.
+From the DX project root, a fresh internal app can deploy as follows:
 
 ```bash
 sf project deploy start \
-  --source-dir force-app/main/default/uiBundles/myApp \
-  --source-dir force-app/main/default/digitalExperiences \
-  --source-dir force-app/main/default/digitalExperienceConfigs \
-  --source-dir force-app/main/default/networks \
-  --source-dir force-app/main/default/sites \
+  --source-dir force-app/main/default/uiBundles/MyApp \
+  --source-dir force-app/main/default/applications/MyApp.app-meta.xml \
+  --source-dir force-app/main/default/permissionsets/MyApp_Access.permissionset-meta.xml \
   --target-org TARGET_ORG
+sf org assign permset --name MyApp_Access --target-org TARGET_ORG
+sf org open --target-org TARGET_ORG
 ```
 
-> **Only one UI bundle deploys per metadata push** is the safe pattern. If you have multiple bundles in your project, deploy them in separate `sf project deploy start` calls.
+Adapt paths/names to actual generated files. External apps need the four site
+metadata types; Apex-backed apps need their backend dependencies. Deploying all
+`force-app` is appropriate when the entire project is in scope. There is no
+special dependency order in the current guide. Scope deploys to the user's work;
+one bundle at a time is a troubleshooting option, not a documented universal cap.
 
-## Deploy (MCP — preferred)
+Salesforce DX MCP is an equivalent authoring path when configured. Discover its
+actual tools and schemas; don't paste stale hardcoded `mcp_Salesforce_DX_*` calls.
+See [authoring-surface.md](authoring-surface.md).
 
-```js
-// 1. Get the org alias
-mcp_Salesforce_DX_get_username({ defaultTargetOrg: true })
-
-// 2. Deploy
-mcp_Salesforce_DX_deploy_metadata({
-  usernameOrAlias: "myorg",
-  sourceDir: ["force-app/main/default/uiBundles/myApp"]
-})
-```
-
-For external apps, include all four supporting folders in `sourceDir`.
-
-For internal apps, include the `applications/` folder:
-
-```js
-mcp_Salesforce_DX_deploy_metadata({
-  usernameOrAlias: "myorg",
-  sourceDir: [
-    "force-app/main/default/uiBundles/myApp",
-    "force-app/main/default/applications"
-  ]
-})
-```
-
-## Open the org
-
-```bash
-sf org open
-# Or via MCP:
-mcp_Salesforce_DX_open_org({ usernameOrAlias: "myorg" })
-```
-
-## Sample data import
-
-Most templates include a `data/` folder with a tree plan for sample records:
-
-```bash
-sf data import tree --plan ./data/data-plan.json --target-org TARGET_ORG
-```
-
-## Common CLI failure modes
-
-| Symptom | Cause | Fix |
-|---|---|---|
-| `sf template generate ui-bundle` not recognized | Plugin missing | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
-| Template name `reactinternalapp` not recognized under `ui-bundle` | Template belongs to project generation in your CLI, or the installed plugin changed | Check both `sf template generate ui-bundle --help` and `sf template generate project --help` |
-| `npm run graphql:schema` fails with auth error | No authorized org in this shell | `sf org login web -a alias` and re-run |
-| Deploy fails with file-count error | UIBundle ≥ 2,500 files | Disable source maps, prune `dist/` |
-| Deploy fails with `Invalid Target value 'AppLauncher'` | Stale Beta target | Use `<target>CustomApplication</target>` |
-| Deploy fails with `Property 'uiBundle' not valid in version 66.0` | API version too low | Set `sourceApiVersion` to `67.0` or higher |
-| Deploy succeeds but app missing from App Launcher | Missing `SetupEntityAccess`, `<isActive>` is `false`, or `<target>` mismatch | Grant app access; set `isActive` true; confirm target |
-| External app deploys but site is empty | Forgot to deploy `digitalExperiences`, `networks`, or `sites`, or `contentBody.appContainer/appSpace` is wrong | Re-deploy with all four folders and verify generated `content.json` shape |
-| Vite dev server data calls 401 | Org authorization expired | `sf org login web -a alias` |
-| Build OK locally but deploy fails | `outputDir` in `ui-bundle.json` doesn't match where the build emits | Align `outputDir` with `vite.config.ts` `build.outDir` |
-
-## Useful org-side commands
-
-```bash
-sf org assign permset -n recipes                     # Assign starter PSet
-sf org list                                          # See all authorized orgs
-sf org display --target-org alias --verbose          # Confirm API version, instance URL
-sf org open --target-org alias                       # Open the org in browser
-```
+For API/config, publication, tests, and failure diagnosis, read
+[project-structure.md](project-structure.md), [ci-deploy.md](ci-deploy.md), and
+[troubleshooting.md](troubleshooting.md). Sample record imports and site publishing
+are separate operations; perform them only when included in the task.

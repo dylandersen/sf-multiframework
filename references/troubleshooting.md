@@ -1,132 +1,44 @@
-# Troubleshooting
+# Troubleshooting by symptom
 
-Bucketed by where the failure happens. Each row is a real failure mode seen in Multi-Framework projects with the **first** thing to check.
+Reviewed 2026-10-08. These are diagnostic hypotheses; confirm the actual error,
+installed versions, org capabilities, and user before changing settings.
 
-## Setup & enablement
-
-| Symptom | Likely cause | First check |
+| Symptom | First checks | Reference |
 |---|---|---|
-| Feature toggle missing in Setup | Org default language ≠ `en_US`, or the release hasn't reached the org yet | Confirm `en_US`; the feature is available in DE, Sandbox, and Production |
-| Feature toggle visible but greyed out | User missing **Customize Application** | Assign System Administrator profile or equivalent permission |
-| Deploy fails: `UIBundle Metadata API is not enabled because the … feature gate is disabled` (or `The specified field isn't valid: uiBundle`) | Org's Multi-Framework toggle is off | Enable **Salesforce Multi-Framework** in Setup (one-way); see [setup.md](setup.md) |
-| App loads in English only / blank screens elsewhere | Org default language ≠ `en_US` | Scratch: set `"language": "en_US"`. Sandbox: change org language |
-| `sf template generate ui-bundle` not recognized | `@salesforce/plugin-ui-bundle-dev` not installed | `sf plugins install @salesforce/plugin-ui-bundle-dev` |
-| `npm install` fails with Vite peer conflict | Salesforce Vite plugin and latest `@vitejs/plugin-react` target different Vite majors | Pin compatible majors, e.g. Vite 7 + `@vitejs/plugin-react` 5 |
+| Domain/setup option absent or metadata feature gate fails | Eligible edition, Hyperforce, cloud restrictions, org release, Customize Application, app domain/Edge settings | [setup.md](setup.md) |
+| Scaffold template missing | Correct command family (project versus bundle), plugin/version and `--help` | [templates.md](templates.md) |
+| Vite install peer conflict | Plugin's installed Vite peer range; preserve compatible versions | [project-structure.md](project-structure.md) |
+| Plugin has no named `uiBundle` export | Use default `salesforce` import matching declarations | [templates.md](templates.md) |
+| Bundle version rejected | XML expects integer schema version (`1`), not `1.0.0` | [project-structure.md](project-structure.md) |
+| Runtime apiVersion rejected | Current docs support `vXX.X`; distinguish runtime JSON, SDK option, and DX version formats; inspect validator/version | [ci-deploy.md](ci-deploy.md) |
+| Invalid old `AppLauncher` target | Current internal target is `CustomApplication`; deploy companion qualified app reference | [beta-to-ga-migration.md](beta-to-ga-migration.md) |
+| API 66 rejects CustomApplication uiBundle | Current internal metadata baseline 67+ | [ci-deploy.md](ci-deploy.md) |
+| App deployed but missing from Launcher | Companion CustomApplication, `isActive`, app visibility grant/assignment; API Enabled for data | [permissions-csp.md](permissions-csp.md) |
+| Shell loads but data fails | Actual launch URL/session, SDK transport, GraphQL errors, API Enabled, CRUD/FLS/sharing | [data-sdk.md](data-sdk.md) |
+| SDK GraphQL response silently undefined | Capability unavailable; do not render it as empty success | [data-sdk.md](data-sdk.md) |
+| Cache-only request has no data | Inspect `errors[].extensions.code === "CACHE_MISS"`; Promise need not reject | [data-sdk.md](data-sdk.md) |
+| Data stale after save | Refresh retained query or requery with no-cache; mutate does not update cache | [graphql-workflow.md](graphql-workflow.md) |
+| Repeated queries never reuse cache | Different headers (especially trace IDs), base URL/API partitions, partial errors, uncached surface | [data-sdk.md](data-sdk.md) |
+| Field missing/null | Inspect query/schema/FLS/errors; scalars such as Id differ from field envelopes; nullable data is not proof of denied access | [graphql-workflow.md](graphql-workflow.md) |
+| Mutation reports partial data and errors | Verify operation's Id/status before declaring success; reconcile before retry | [error-handling.md](error-handling.md) |
+| Apex REST endpoint not found | URL mapping and deployed Apex/backend dependencies | [experience-cloud-runbook.md](experience-cloud-runbook.md) |
+| Angular builds but deployed shell/assets missing | Actual Angular browser output, relative asset paths, outputDir, generated middleware/build integration | [angular.md](angular.md) |
+| Deep-route hard refresh 404 | SPA fallback, actual basename, runtime URL, asset resolution | [react-router.md](react-router.md) |
+| External app/site empty | All four site types; `contentBody.appContainer`, qualified appSpace; site publication/authentication | [templates.md](templates.md) |
+| Public/reviewer route returns 403/empty records | Endpoint/class access, site membership, user/Contact derivation, sharing and intended security model | [experience-cloud-runbook.md](experience-cloud-runbook.md) |
+| ACC import/mount fails | `embedAgentforceClient`; nested config; salesforceOrigin or frontdoorUrl; intended agent; no invented destroy/docked API | [acc-integration.md](acc-integration.md) |
+| ACC session/frame fails | Cookie policy and exact app origin trusted as Lightning Out; inspect ready/error events | [acc-integration.md](acc-integration.md) |
+| Embedded app fails | Correct full src, UIEmbedding/CSP settings, host event error code; do not mutate src/sandbox after mount | [microfrontends.md](microfrontends.md) |
+| View SDK toast/state method absent | Standalone host or unsupported capability; supply required local UI fallback | [platform-capabilities.md](platform-capabilities.md) |
+| Labels render raw keys | Manifest/namespace, translation fallback, GraphQL support; distinguish 64+ labels extension from 68+ i18n backend | [platform-capabilities.md](platform-capabilities.md) |
+| Too many payload files | Audit actual build and DX payload; prune unused assets; retain managed-review sourcemaps | [packaging.md](packaging.md) |
+| Package upgrade serves inactive bundle | Upgrade preserves IsActive; activate through supported org workflow and verify | [packaging.md](packaging.md) |
 
-## Project & build
+For application-specific layout or LLM-rendering issues, read
+[layout-patterns.md](layout-patterns.md) or [llm-ui-patterns.md](llm-ui-patterns.md)
+only when that architecture is relevant. Preserve server-side app/state scoping
+when multiple bundles share a backend; a client filter alone is not authorization.
 
-| Symptom | Likely cause | First check |
-|---|---|---|
-| Build succeeds, deploy fails | `outputDir` in `ui-bundle.json` doesn't match Vite `build.outDir` | Align both to `dist` |
-| Deploy fails with file-count error | UIBundle exceeded 2,500 files | Disable source maps in production; prune `dist/` |
-| Deploy fails: `Invalid Target value 'AppLauncher'` | Stale Beta target name | Use `<target>CustomApplication</target>` for internal apps |
-| Deploy fails: `Property 'uiBundle' not valid in version 66.0` | Project deploys with API v66.0 | Set `sourceApiVersion` to `67.0` or higher |
-| Deploy succeeds but app missing from App Launcher | Missing app visibility (a new `CustomApplication` is hidden by default, even for admins), `<isActive>false</isActive>`, or wrong `<target>` | Add `applicationVisibilities` to a profile or grant via permission set; query `AppMenuItem.IsAccessible`; confirm target is `CustomApplication` |
-| App loads HTTP 400: `Could not determine handler` | UIBundle deployed without companion `CustomApplication` metadata | Add `applications/<AppName>.app-meta.xml` with `<uiBundle><bundleName></uiBundle>` and redeploy |
-| App shell renders but every data call fails with `INVALID_SESSION_ID` / "session expired" | App opened via the Beta `/lwr/application/ai/c-<bundle>` URL, which no longer carries a session post-GA | Launch from the App Launcher or the `.salesforce.app` URL (see below) |
-| Apex REST call returns `Could not find a match for URL` | Backend `@RestResource` (plus its Apex dependency tree and custom objects) not deployed in this org | Deploy the Apex backend too, not just the bundle — common when moving to a fresh org |
-| Deploy fails: `ui-bundle.json contains unknown property: 'apiVersion'` | Current validator only allows `outputDir`, `routing`, `headers` | Remove `apiVersion` from `ui-bundle.json`; rely on `sfdx-project.json` / deploy API version |
-| Deploy fails: `apiVersion invalid at this location in type UIBundle` | `.uibundle-meta.xml` includes unsupported `<apiVersion>` | Remove `<apiVersion>` from `.uibundle-meta.xml` |
-| Deploy fails: `isEnabled invalid at this location in type UIBundle` | Metadata uses LWC-style or stale field name | Use `<isActive>true</isActive>` and include `<version>` |
-| Deploy report includes `vite.config.js`, `.d.ts`, or `*.tsbuildinfo` | `tsc -b` emitted TypeScript build artifacts into the bundle root | Use `tsc --noEmit && vite build`, delete artifacts, redeploy |
-| Deploy succeeds but external app site is empty | Forgot to deploy `digitalExperiences/`, `networks/`, or `sites/` | Re-deploy with all four metadata folders |
-| Hard refresh on `/dashboard` returns 404 | `routing.fallback` not set to `index.html` | Add `"fallback": "index.html"` under `routing` |
-| Trailing slash redirects loop | Conflicting `trailingSlash` and `redirects` rules | Set `trailingSlash: "never"`, remove redundant redirects |
-| Browser console: 404 on `/assets/...` after deploy | Vite `base` not configured for the served path | Set Vite `base` to match Salesforce-served path; rebuild |
-
-## Accessing internal apps
-
-Internal `CustomApplication` UI bundles are served from the dedicated **`salesforce.app`** domain, not the `.my.salesforce.com` Lightning domain. Each app runs on its own origin, so the browser's Same Origin Policy isolates it natively (one app can't read another's cookies or storage — no proprietary sandboxing needed). Launch from App Launcher whenever possible because it handles session bootstrapping. The direct URL pattern is:
-
-```text
-https://<org>--<namespace>.<instance>.my.salesforce.app/app/c__<bundleName>
-# e.g. https://acme-corp-dev-ed--c.scratch.my.salesforce.app/app/c__myReactApp
-```
-
-Direct navigation to raw `/lwr/application/...` paths on the Lightning domain can return HTTP 400 even when the bundle deployed correctly. The old Beta access path `/lwr/application/ai/c-<bundle>` is especially deceptive post-GA: the shell renders but no session is attached, so every Data SDK / Apex REST call fails with `INVALID_SESSION_ID`. Always launch from the App Launcher.
-
-## Data SDK / GraphQL
-
-| Symptom | Likely cause | First check |
-|---|---|---|
-| `Cannot read properties of undefined (reading 'value')` | Forgot the UI API `{ value }` field wrapper | Read fields as `record.Name.value` |
-| `edges` is null / empty despite data existing | Filter excludes everything; permission issue | Drop the filter; confirm running user has access |
-| Codegen produces empty or `any` types | `schema.graphql` missing or scalars not mapped | `npm run graphql:schema` then add scalar mappings to `codegen.yml` |
-| `GraphQL surface unavailable` thrown | Running in a surface that doesn't expose `graphql` | Use `sdk.fetch?.()` with allow-listed REST endpoint |
-| 401 on every call after deploy | Bypassing Data SDK | Refactor to `createDataSDK()` / `sdk.graphql?.query()` / `sdk.graphql?.mutate()` / `sdk.fetch?.()` |
-| Mutation succeeds but returned record has errors | Field can't be selected on mutation return | Switch call site to **Permissive** error strategy or remove offending fields |
-| `gql` template provides no IntelliSense | GraphQL ESLint plugin / extension not configured | Install `@graphql-eslint/eslint-plugin`; configure `.eslintrc` |
-| Local dev fetches succeed, deployed fetches 401/403 | `basePath` mismatch between dev and deployed surface | Don't hard-code paths; let SDK resolve |
-| React app needs Apex logic from an LWC controller | LWC `@salesforce/apex` imports are unavailable in React UI bundles | Expose Apex as REST and call it through `sdk.fetch?.()` |
-| Apex compile fails: `Invalid type: aiplatform.ModelsAPI...` | Models API / Generative AI settings not enabled for the org | Enable the required org settings; don't replace React Data SDK calls with raw Salesforce fetches |
-
-## Local dev (Vite)
-
-| Symptom | Likely cause | First check |
-|---|---|---|
-| Vite dev server starts but data calls 401 | No authorized org in this shell | `sf org login web -a alias` |
-| Vite proxy doesn't forward to org | `@salesforce/vite-plugin-ui-bundle` not in `vite.config.ts` | Add the plugin |
-| ACC FAB doesn't appear locally | `localhost` origin not in Trusted Domains | Add `http://localhost:<port>` with iFrame type Lightning Out |
-| HMR doesn't pick up `.graphql` changes | Codegen not re-run | `npm run graphql:codegen` after every `.graphql` edit (or add a watcher) |
-
-## Agentforce Conversation Client (ACC)
-
-| Symptom | Likely cause | First check |
-|---|---|---|
-| FAB never appears | Trusted Domains not added or cookies still restricted | Verify both: My Domain cookie policy off + Trusted Domains entry with iFrame type Lightning Out |
-| Panel opens but disconnects on navigation | Origin mismatch (e.g. wrong port) | Add the **exact** origin including port |
-| Welcome message missing | Agentforce preference disabled | Setup → Einstein → Agentforce Studio → enable Agentforce |
-| Rich Lightning Types render as plain text | Agent action output schema not using a Lightning Type | Update GenAiFunction output schema (delegate to developing-agentforce; older `sf-skills`: `sf-ai-agentforce`) |
-| Streaming cuts off mid-response | Network keepalive issue or session expiry | Inspect devtools Network; refresh session; retry |
-| Branding tokens don't apply | SDK option key names differ from docs read | Check installed `@salesforce/agentforce-conversation-client` version's TypeScript declarations |
-| ACC works in prod but not local | `localhost` origin missing from Trusted Domains | Add `http://localhost:<port>` |
-
-## Styling
-
-| Symptom | Likely cause | First check |
-|---|---|---|
-| SLDS classes don't apply | `@salesforce-ux/design-system` CSS not imported globally | Import in `global.css` once at app entry |
-| `design-system-react` icons missing | No `IconSettings` wrapper | Wrap app/component subtree in `<IconSettings iconPath="/assets/icons">` |
-| Tailwind utilities don't override SLDS | Specificity / source order | Pick **one** system per component; don't mix |
-| Dark mode variables don't switch | `.dark` class not applied to `<html>` | Add `class="dark"` toggle on root |
-| Focus ring is grey instead of Salesforce blue | Default shadcn `--ring` token | Set `--ring: #0176d3` in `global.css` |
-
-## External (Experience Cloud) apps
-
-| Symptom | Likely cause | First check |
-|---|---|---|
-| Site shows but app doesn't render | `contentBody.appContainer` or `contentBody.appSpace` wrong in `content.json` | `contentBody.appContainer: true`; `contentBody.appSpace: "<NamespacePrefix>__<DeveloperName>"` (or `c__<DeveloperName>`) |
-| Site URL 404s | `networks/` or `sites/` not deployed | Deploy all four metadata folders together |
-| Public page loads but shows sample fallback and API `403` | Guest profile lacks Apex class access to the public REST endpoint | Grant guest profile access to the curated Apex endpoint only; avoid broad guest object access |
-| Public board shows assigned/in-review data | Publication filter is too broad | Filter public records on final publication semantics, such as approved/awarded state, not only a visibility flag |
-| User can't log in | Missing Customer / Partner Community license, cloned external profile not a site member, or guest lacks login Apex access | Clone a standard external profile into an app-specific profile, assign users to the clone, add the cloned profile to `networkMemberGroups`, and grant guest access to login/forgot-password Apex classes |
-| External user creation fails: `portal account owner must have a role` | Contact Account owner has no UserRole | Create/assign an internal role to the account owner before creating the portal user |
-| External user creation fails with standard external profile message | Digital Experiences setting for standard external profile user creation/login is disabled while using/cloning a standard external profile | Enable the setting represented by `CommunitiesSettings.enableOotbProfExtUserOpsEnable`, then assign users to a cloned app-specific profile |
-| Reviewer logs in but sees no assignments | User is linked to Contact, but record sharing gives no read access and user-mode queries return zero rows | Add sharing/Apex managed sharing, or use a curated Apex façade scoped by `UserInfo.getUserId()` → `User.ContactId` |
-| Trying to edit site in Experience Builder | Not supported for React-app sites | Skip Builder; edit via metadata |
-
-## Generic recovery checklist
-
-When something is broken and you're not sure where:
-
-1. Did `npm run build` pass? If no, fix the build first.
-2. Did `npm run lint` pass? Lint errors often mask runtime bugs.
-3. Is `schema.graphql` fresh? Re-run `npm run graphql:schema` and `npm run graphql:codegen`.
-4. Is the org authorized in this shell? `sf org list` then `sf org login web -a alias` if needed.
-5. Is the running user assigned the bundle's permission set?
-6. Did a second deploy report source-tracking conflicts immediately after a successful create? If yes, and the org changes are your just-created bundle, redeploy the local bundle with `--ignore-conflicts`.
-7. For ACC: re-walk the [acc-integration.md](acc-integration.md) checklist top to bottom.
-8. For internal apps: confirm `applications/<AppName>.app-meta.xml` deployed and `AppMenuItem.IsAccessible` is true for the test user.
-9. For external apps: confirm all four metadata folders deployed and the site is published.
-10. For public/reviewer Experience routes: walk [experience-cloud-runbook.md](experience-cloud-runbook.md), especially guest Apex access, profile site membership, Contact-linked users, and sharing-vs-façade decisions.
-11. Compare against the [`multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) reference repo for the exact pattern you're trying to use.
-
-## Reporting bugs to Salesforce
-
-This feature still changes quickly. Real issues exist beyond what's listed here. When filing:
-
-- Include org type (sandbox / scratch), org language, API version
-- Include `sf --version` and `node -v`
-- Include `package.json` of the bundle (versions of `@salesforce/platform-sdk`, `@salesforce/agentforce-conversation-client`)
-- Include exact `ui-bundle.json` and `<app>.uibundle-meta.xml`
-- Reproduce against `multiframework-recipes` if possible to isolate
+Record an actionable reproduction: framework, relevant package versions, CLI/API,
+org edition/release/cloud, sanitized config, precise error, and intended user
+permissions. Do not include credentials or full session-bearing org output.

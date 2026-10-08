@@ -1,5 +1,7 @@
 # Recipe Conventions
 
+> Scope: These are educational recipe conventions, not production/platform requirements. For Angular, helper classes referenced eagerly by @Component imports must appear before the consumer; see [angular.md](angular.md). Current upstream AGENT.md has stale SDK/metadata sections: use current docs and declarations for APIs.
+
 These conventions come from the [`trailheadapps/multiframework-recipes`](https://github.com/trailheadapps/multiframework-recipes) reference repo. They apply when building **learning recipes** — self-contained components that demonstrate one concept at the React × Salesforce intersection. They're a strong default for production code too, with explicit exceptions called out below.
 
 ## What is a recipe?

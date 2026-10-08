@@ -1,5 +1,7 @@
 # LLM-Driven UI Patterns
 
+> Scope: Optional custom application architecture, not the platform ACC or a required Multi-Framework workflow. Use these only for a requested custom LLM surface and independently verify Models API/Apex contracts before implementation.
+
 When the React UI bundle drives Salesforce's Models API (or any LLM) through
 an Apex REST endpoint — for example a custom "ask anything about my pipeline"
 chat panel, an inline "draft this email" surface, or an agentic inspector —
@@ -250,54 +252,47 @@ Why `memo` + `useMemo`:
 
 ## 5) Lightning record links inside server-returned HTML
 
-When the LLM (or your direct-response builder) emits record links, use
-**absolute Lightning paths** so they navigate inside the same frame the app
-is hosted in:
+Salesforce-hosted bundles have their own app origin. A relative
+`/lightning/r/...` URL therefore does not automatically navigate to the org's
+Lightning domain, and an Experience site is not guaranteed to rewrite it.
+For a record inspector inside your app, emit an app-owned route and structured
+record attributes. For navigation to Salesforce, use the supported host
+`navigateTo` contract when available or a verified, environment-specific org/site
+URL with an appropriate fallback. Do not hardcode a production origin.
+
+An optional inspector convention (the `/records` route is your app's route):
 
 ```html
-<a href="/lightning/r/Account/001D700001caEjGIAU/view"><b>Mariner Bank</b></a>
+<a href="/records/Account/001D700001caEjGIAU"
+   data-object="Account" data-record-id="001D700001caEjGIAU">Mariner Bank</a>
 ```
 
-Do NOT use full origin URLs (`https://yourorg.lightning.force.com/lightning/r/...`)
-because:
+Allow these attributes in the sanitizer and intercept only the intended links:
 
-- In an **internal CustomApplication app launched from App Launcher**, the React app already lives inside the
-  Lightning frame; relative paths route correctly without a top-frame jump.
-- In an **Experience Cloud app**, the absolute path is rewritten by the
-  Salesforce frame; a hard-coded production origin breaks sandbox/scratch.
+```tsx
+const ALLOWED_ATTR = ["href", "title", "class", "data-object", "data-record-id"];
 
-Two patterns to keep these links clickable through `SafeHtml`:
-
-```ts
-// 1. Allow href on <a> in the sanitizer (already shown above).
-const ALLOWED_ATTR = ["href", "title", "class", "data-record-id"];
-
-// 2. Optionally intercept the click in React to route via react-router
-//    instead of letting the browser do a hard navigation — useful when
-//    your app shell renders nested record inspectors.
 function ChatBubble({ html }: { html: string }) {
-  const navigate = useNavigate();
   return (
-    <div
-      onClick={(e) => {
-        const target = (e.target as HTMLElement).closest("a");
-        if (!target) return;
-        const href = target.getAttribute("href");
-        if (href?.startsWith("/lightning/r/")) {
-          // Open the inspector panel instead of leaving the page
-          const [, , objectApiName, recordId] = href.split("/");
-          if (objectApiName && recordId) {
-            e.preventDefault();
-            openInspector(objectApiName, recordId);
-          }
-        }
-      }}
-    >
+    <div onClick={(event) => {
+      if (!(event.target instanceof Element)) return;
+      const link = event.target.closest("a[data-record-id][data-object]");
+      const objectApiName = link?.getAttribute("data-object");
+      const recordId = link?.getAttribute("data-record-id");
+      if (objectApiName && recordId) {
+        event.preventDefault();
+        openInspector(objectApiName, recordId);
+      }
+    }}>
       <SafeHtml html={html} />
     </div>
   );
 }
 ```
+
+`SafeHtml` and `openInspector` are application helpers. An emitted record Id
+is navigation context, not proof of access; use normal SDK/server authorization
+when loading it. Verify keyboard activation and the route's direct-load fallback.
 
 ---
 

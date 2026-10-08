@@ -1,5 +1,7 @@
 # Experience Cloud React UI Bundle Runbook
 
+> Scope: Application-specific React portal/Apex patterns retained from earlier implementations. These are optional custom authentication and publication workflows, not requirements of every external template. Preserve platform authorization checks and prefer supported generated auth flows unless the task needs a façade.
+
 Use this runbook when a Multi-Framework React app targets `Experience`, especially when the app has both public and authenticated routes.
 
 ## What the Community Resilience Grants demo proved

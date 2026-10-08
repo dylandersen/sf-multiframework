@@ -10,7 +10,8 @@ Each entry in `response.errors` is a `GraphQLError`:
 interface GraphQLError {
   message: string;
   locations?: { line: number; column: number }[];
-  path?: string[];   // e.g. ["uiapi", "AccountCreate", "Record", "AnnualRevenue"]
+  extensions?: Record<string, unknown>;
+  path?: Array<string | number>; // GraphQL paths can include list indices; e.g. ["uiapi", "AccountCreate", "Record", "AnnualRevenue"]
 }
 ```
 
@@ -30,6 +31,7 @@ async function strictExecute<T>(query: string, variables?: object): Promise<T> {
   if (response.errors?.length) {
     throw new Error(response.errors.map(e => e.message).join("; "));
   }
+  if (!response.data) throw new Error("No usable data returned");
   return response.data as T;
 }
 ```
@@ -63,15 +65,18 @@ Good fit: list views with optional fields (e.g. `Photo`, `Industry`) where missi
 > Use when: mutations succeed but can't read back every requested field; the operation itself is what matters.
 
 ```ts
-async function permissiveExecute<T>(mutation: string, variables?: object): Promise<T> {
+import type { MutationResult } from "@salesforce/platform-sdk/data";
+
+async function permissiveExecute<T>(mutation: string, variables?: object): Promise<MutationResult<T>> {
   const sdk = await createDataSDK();
   // Permissive is typically for writes — use .mutate() with a `mutation` key.
-  const response = await sdk.graphql?.mutate({ mutation, variables });
+  const response = await sdk.graphql?.mutate<T>({ mutation, variables });
   if (!response) throw new Error("GraphQL surface unavailable");
   if (!response.data && response.errors?.length) {
     throw new Error(response.errors.map(e => e.message).join("; "));
   }
-  return response.data as T;
+  if (!response.data) throw new Error("No usable data returned");
+  return response; // Preserve errors; caller confirms the operation's Id/status.
 }
 ```
 
@@ -80,6 +85,8 @@ Good fit: `<Object>Update` mutations that return a `Record` containing fields th
 > **Mutations preserve partial data.** A partially successful mutation returns *both* `data` and `errors` — the SDK keeps the partial payload, so callers can still use the fields that came back (e.g. the new `Id`) even when other fields errored (typically field-level access on the returned `Record`). Don't discard `data` just because `errors` is non-empty.
 >
 > `MutationResult` has **no** `refresh()` / `subscribe()`. To refresh views after a write, call `refresh()` on the relevant *query* result (or re-run the query). See [data-sdk.md](data-sdk.md).
+
+A data object alone does not prove every mutation succeeded: inspect the requested operation and its returned Id/status. A partial mutation may already have written records; reconcile before retrying. A cache-only miss resolves with `errors[].extensions.code === "CACHE_MISS"`; handle it outside the Promise rejection path.
 
 ## Picking a strategy
 
@@ -136,13 +143,15 @@ if (res.status >= 500) {
 }
 ```
 
-For auth-sensitive flows, prefer wiring `on401` / `on403` callbacks at the SDK level so the same behavior runs for every call:
+For auth-sensitive flows, prefer wiring `webapp.onStatus` callbacks at the SDK level so the same behavior runs for every call:
 
 ```ts
 const sdk = await createDataSDK({
   webapp: {
-    on401: () => signInAgain(),
-    on403: () => showPermissionsHelp()
+    onStatus: {
+      401: () => signInAgain(),
+      403: () => showPermissionsHelp()
+    }
   }
 });
 ```

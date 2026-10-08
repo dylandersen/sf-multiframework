@@ -1,15 +1,15 @@
 # Testing UI Bundles
 
-The reference repo ships a **Vitest + React Testing Library + Playwright** stack with an 85% coverage threshold and per-recipe accessibility tests (`vitest-axe`). Treat this as the default.
+The React recipe reference ships a **Vitest + React Testing Library + Playwright** stack with an 85% coverage threshold and per-recipe accessibility tests (`vitest-axe`). The configuration examples below are optional React/project conventions, not platform requirements or Angular defaults. Preserve the existing test stack; Angular uses its generated ng test pipeline (see [angular.md](angular.md)).
 
 | Layer | Tool | Purpose |
 |---|---|---|
 | Unit / component | **Vitest** + **@testing-library/react** | Render recipe components with mocked SDK, assert on DOM |
 | Accessibility | **vitest-axe** | Runs axe-core against the rendered container |
 | End-to-end | **Playwright** | Runs the built `dist/` against a static server; no live org required |
-| Org-side Apex | **sf-testing** skill | Apex test runner — this is *not* this stack's job |
+| Org-side Apex | Existing Apex test workflow | Apex test runner — this is *not* this stack's job |
 
-## Install
+## Optional React test-stack setup
 
 ```bash
 npm install --save-dev vitest @vitest/ui @vitest/coverage-v8 \
@@ -31,7 +31,7 @@ npm install --save-dev vitest @vitest/ui @vitest/coverage-v8 \
 }
 ```
 
-`npm run test` is watch mode; `test -- --run` is CI mode. `test:coverage` emits text + HTML + lcov.
+`npm run test` is watch mode; `test -- --run` is CI mode. `test:coverage` emits the reporters configured by the project; inspect config before promising lcov.
 
 ## `vitest.config.ts`
 
@@ -90,7 +90,7 @@ Without these, every axe assertion throws `TypeError: getContext is not a functi
 
 ## The standard recipe test pattern
 
-Each recipe gets a `<Name>.test.tsx` sibling file. Mock `@salesforce/platform-sdk` globally, control `graphql` / `fetch` per test, assert on DOM:
+When creating or changing behavior in a recipe, use its existing sibling test convention. Mock the exact `@salesforce/platform-sdk/data` entry point the component imports, control `graphql` / `fetch` per test, assert on DOM:
 
 ```tsx
 // src/recipes/hello/BindingAccountName.test.tsx
@@ -187,7 +187,7 @@ it("is accessible", async () => {
 });
 ```
 
-This is non-negotiable in the reference repo and catches SLDS markup mistakes (missing `aria-label`, `role="status"` vs `role="alert"`, incorrect heading hierarchy). If SLDS React components break color-contrast, use axe's `rules` override per test — don't disable axe globally.
+The React recipe project requires these checks to catch SLDS markup mistakes (missing `aria-label`, `role="status"` vs `role="alert"`, incorrect heading hierarchy). Apply equivalent checks in the target project's stack. If SLDS React components break color-contrast, investigate the component/theme before making a justified per-test axe override.
 
 ## `router` tests
 
@@ -252,7 +252,7 @@ Write e2e for: routing, layout regressions, empty-state rendering, keyboard navi
 
 ## Coverage thresholds
 
-The reference repo sets `branches/functions/lines/statements: 85`. Enforce this in CI (`vitest --run --coverage`). The config's `exclude` block matters:
+The React recipe project sets `branches/functions/lines/statements: 85`. Preserve the target project's chosen thresholds; when it uses these conventions, enforce them in CI (`vitest --run --coverage`). The config's `exclude` block matters:
 
 ```ts
 coverage: {
@@ -302,3 +302,7 @@ Full CI sequence: [ci-deploy.md](ci-deploy.md).
 | `findBy*` queries time out but UI clearly renders | Check whether the mocked `graphql` actually resolves — missing `.mockResolvedValue(...)` returns `undefined` |
 | Playwright webServer times out in CI | Increase `timeout` to 120s; confirm `dist/` exists before `webServer` runs |
 | Coverage report shows 0% for route pages | `src/pages` is glob-included but the pages just forward to recipes; test the recipes directly or exclude `src/pages` |
+
+## Current platform boundaries
+
+Reviewed against [Test Your App](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-testing.html) on 2026-10-08. Templates document `npm run build:e2e` before static Playwright tests; React then uses `npx playwright test`, Angular uses `npm run e2e`. Static mocks do not establish deployed sessions, CSP, permission sets, or data access. Test missing SDK capabilities, resolved GraphQL errors (including CACHE_MISS), successful empty results, partial mutations, refresh behavior, and async cleanup when those behaviors change. Match exact SDK imports and include subscribe/refresh methods in mocks when used.

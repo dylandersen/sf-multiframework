@@ -2,7 +2,7 @@
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>My App</label>
     <uiType>Lightning</uiType>
-    <uiBundle>myApp</uiBundle>
+    <uiBundle>c__myApp</uiBundle>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>

@@ -31,7 +31,7 @@ What it does:
 Notes:
 - `schema.graphql` is **not** committed (it's org-specific).
 - Re-run any time the org schema changes (new objects, new fields).
-- Scratch org support is uncertain — sandbox is the safest bet.
+- Scratch orgs are used by current recipes; verify eligibility and authenticate the target org. Do not infer a scratch-only limitation from an old recipe note.
 
 ## Step 2 — Define operations
 
@@ -145,10 +145,10 @@ The full UI API scalar list is critical — without it, codegen falls back to `a
 
 ```tsx
 import QUERY from "./query/listAccountsQuery.graphql?raw";
+import type { NodeOfConnection } from "@salesforce/platform-sdk/data";
 import type {
   ListAccountsQuery,
-  ListAccountsQueryVariables,
-  NodeOfConnection
+  ListAccountsQueryVariables
 } from "../graphql-operations-types";
 import { executeGraphQL } from "../graphqlClient";
 
@@ -198,7 +198,7 @@ const res = await sdk.graphql?.query<MyQuery, MyQueryVariables>({
 });
 ```
 
-The returned `QueryResult` is reactive: `res?.subscribe(cb)` streams later snapshots and `res?.refresh()` forces a fresh fetch. `mutate()` takes `{ mutation, variables, operationName }` only — no `cacheControl`, no `subscribe`/`refresh`. Full interfaces: [data-sdk.md](data-sdk.md).
+The returned `QueryResult` is reactive: `res?.subscribe(cb)` streams later snapshots and `res?.refresh()` forces a fresh fetch. `query()` and `mutate()` also accept `headers?: HeadersInit`. `mutate()` takes `{ mutation, variables, operationName, headers }` — no `cacheControl`, no `subscribe`/`refresh`. Full interfaces: [data-sdk.md](data-sdk.md).
 
 ## Mutations
 
@@ -251,14 +251,14 @@ rg "type Account implements Record" schema.graphql
 rg "input Account_Filter|input Account_OrderBy|input AccountUpdateInput" schema.graphql
 ```
 
-> Some fields **cannot be returned** from a mutation. If you get partial data + errors back, use the **Permissive** error strategy or remove the offending fields from the return shape. See [error-handling.md](error-handling.md).
+> Some fields **cannot be returned** from a mutation. If you get partial data + errors back, inspect the specific operation result/returned Id before declaring success, and remove inaccessible return fields when appropriate. See the **Permissive** strategy discussion. See [error-handling.md](error-handling.md).
 
 ### Refreshing data after a mutation
 
 Mutations don't touch the cache, so the UI won't update on its own. Three patterns:
 
 1. **`QueryResult.refresh()`** — if you kept the `QueryResult` from the original `query()` (and are `subscribe()`d to it), call `await result.refresh()` after the mutation; subscribers re-render.
-2. **Re-query** — if you don't have the `QueryResult`, just call your loader again (or issue the query with `cacheControl: "no-cache"` to force fresh data).
+2. **Re-query with `cacheControl: "no-cache"`** — repeating the ordinary loader can return the same cached pre-write data.
 3. **Optimistic update** — update local state immediately, then reconcile: on failure, revert by calling `result.refresh()` (or re-query).
 
 ```ts
@@ -276,7 +276,7 @@ try {
 - **Always select `Id`** in create/update return fields.
 - **Type the input** with an explicit interface (`CreateAccountInput`) and use generated `<Op>Mutation` / `<Op>MutationVariables` types on `mutate<T, V>()`.
 - **Show loading + success/error feedback**, and **reset form state** on success.
-- **Batch related writes** (e.g. create Account, then `Promise.all` its Contacts with the new `Id`).
+- Coordinate related writes deliberately. Parallel mutations are not automatically atomic; handle partial outcomes and avoid blind retries of uncertain writes.
 
 ## Schema exploration tips
 
@@ -308,7 +308,7 @@ Choose per use case:
 | Symptom | Cause | Fix |
 |---|---|---|
 | Codegen produces empty types file | `schema.graphql` missing | `npm run graphql:schema` |
-| `Property 'value' does not exist on type 'string'` | Forgot the `{ value }` wrapper | Read field as `record.Name.value` |
+| `Property 'value' does not exist on type 'string'` | Treating a scalar such as `Id` as a field envelope, or response/query type mismatch | Inspect schema/codegen; `Id` is scalar, `Name { value }` is an envelope |
 | `edges` is `null` despite data | Filter excluded everything; pageInfo / size mismatch | Drop filter, narrow with explicit field args |
 | Mutation succeeds but errors mention a return field | Field can't be selected on mutation return | Remove that field from the mutation, or switch to Permissive |
 | Codegen types fall back to `any` | Scalar mappings missing in `codegen.yml` | Add full UIAPI scalar list (see above) |

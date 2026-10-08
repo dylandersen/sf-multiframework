@@ -1,101 +1,36 @@
-# Activation Checklist
+# Activation and readiness checklist
 
-Run through this list before authoring or fixing a Multi-Framework app. Each item maps to a common failure mode.
+Use this for a new app or deployment review; ordinary component edits only need
+the relevant checks. [Current setup](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-setup.html),
+[metadata](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-project-structure.html),
+and [access](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-manage.html)
+were reviewed on 2026-10-08.
 
-## Org & Environment
-
-- [ ] Org is a supported edition — **DE, Sandbox, Production, or Scratch** (all editions on the **Summer '26 release or later**, no opt-in; GA July 16, 2026)
-- [ ] Org default language is **`en_US`** (scratch org def explicitly sets `"language": "en_US"`)
-- [ ] **Salesforce Multi-Framework** enabled in Setup → cannot be disabled later
-- [ ] User has **Customize Application** permission to enable the feature
-- [ ] **Node.js v22+** installed (`node -v`)
-- [ ] **Salesforce CLI** is current (`sf update`)
-- [ ] **`@salesforce/plugin-ui-bundle-dev`** installed (`sf plugins`)
-- [ ] **Salesforce Extension Pack** installed in VS Code (or equivalent IDE)
-- [ ] `sfdx-project.json` has `"sourceApiVersion": "67.0"` or higher (`CustomApplication.uiBundle` is unavailable in v66.0)
-
-## Project Layout
-
-- [ ] App lives at `force-app/main/default/uiBundles/<appName>/` (or matching package dir)
-- [ ] `<appName>.uibundle-meta.xml` exists at the bundle root
-- [ ] `ui-bundle.json` exists at the bundle root
-- [ ] `outputDir` in `ui-bundle.json` matches what the build emits (Vite default: `dist`)
-- [ ] `ui-bundle.json` contains only supported top-level keys: `outputDir`, `routing`, `headers`
-- [ ] API version is set through `sfdx-project.json` / deploy API version, not `ui-bundle.json`
-- [ ] For SPAs: `routing.fallback: "index.html"` is set
-- [ ] `package.json` inside the bundle (separate from the project root `package.json`)
-
-## Internal Apps Only (`target: CustomApplication`)
-
-- [ ] `<appName>.uibundle-meta.xml` uses `<target>CustomApplication</target>` (`AppLauncher` is deprecated and rejected in v67.0)
-- [ ] `force-app/main/default/applications/<AppName>.app-meta.xml` exists
-- [ ] The `CustomApplication` metadata has `<uiBundle><appName></uiBundle>`
-- [ ] Bundle and `applications/` metadata deploy together
-- [ ] App visibility is granted — a new `CustomApplication` is hidden by default (even for admins). Add `applicationVisibilities` to the test user's profile, or link a permission set via `SetupEntityAccess`
-- [ ] App is launched from App Launcher or the `.salesforce.app` URL pattern, not a raw `/lwr/application/...` Lightning URL (the Beta `/lwr/application/ai/c-<bundle>` path renders but has no session)
-- [ ] If this is a fresh org, the Apex backend (`@RestResource` + dependencies + custom objects) is deployed too — not just the bundle
-
-## External Apps Only (`target: Experience`)
-
-- [ ] **Digital Experiences** is enabled in Setup
-- [ ] At least one site exists (placeholder is fine — no template needed)
-- [ ] Customer/Partner Community user licenses available
-- [ ] `digitalExperienceConfigs/` deployed
-- [ ] `digitalExperiences/site/<SiteName>/sfdc_cms__site/<SiteName>/content.json` deployed with:
-  - `contentBody.appContainer: true`
-  - `contentBody.appSpace: "<NamespacePrefix>__<DeveloperName>"` (or `c__<DeveloperName>` if no namespace)
-- [ ] `networks/` and `sites/` deployed
-- [ ] Site is published after deploy (`sf community publish --name "<ExperienceName>"`)
-- [ ] You verify the actual React app path, not only the underlying `...vforcesite` URL returned by publish
-- [ ] If the app has a public Apex REST route, the guest profile has Apex class access to the curated endpoint and no unnecessary object permissions
-- [ ] If the app has login/forgot-password routes, the guest profile has Apex class access to the auth endpoints used by the template
-- [ ] If the app has authenticated external users, a standard external profile has been cloned into an app-specific profile, the cloned profile is a site member, the Contact is linked, the Account owner has a role, and the needed permission set is assigned
-- [ ] You **don't** try to edit the React app site in Experience Builder (not supported)
-- [ ] Full external-app playbook followed: [experience-cloud-runbook.md](experience-cloud-runbook.md)
-
-## Agentforce Conversation Client (only if embedding ACC)
-
-- [ ] An **Employee Agent** with topics + actions exists in the org
-- [ ] Setup → Einstein → Agentforce Studio → **Agentforce preference** is enabled
-- [ ] Setup → My Domain → **"Require first-party use of Salesforce cookies"** is **unchecked**
-- [ ] Setup → Session Settings → **Trusted Domains for Inline Frames** includes the host origin (prod, preview, and `http://localhost:<port>` for dev), iFrame type **Lightning Out**
-- [ ] `npm install @salesforce/agentforce-conversation-client` completed
-- [ ] Mount lifecycle uses `useRef` + `useEffect` and unmount cleanup
-
-## Data SDK & GraphQL
-
-- [ ] All Salesforce calls go through the Data SDK, imported from `@salesforce/platform-sdk/data` (`createDataSDK`, `gql`)
-- [ ] **No raw `fetch()` or `axios`** to Salesforce endpoints
-- [ ] `schema.graphql` generated from a connected org (`npm run graphql:schema`)
-- [ ] `src/api/graphql-operations-types.ts` regenerated after every `.graphql` edit (`npm run graphql:codegen`)
-- [ ] Reads use `sdk.graphql?.query({ query })`, writes use `sdk.graphql?.mutate({ mutation })` (Beta's generic `graphql()` is gone)
-- [ ] Optional chaining used on SDK methods and on `result.data`: `sdk.graphql?.query()`, `sdk.fetch?.()`, `result?.data?.uiapi`
-- [ ] Field reads use `{ value }` shape: `record.Name.value`
-- [ ] Connection reads use `edges/node` pattern: `result.uiapi.query.X.edges?.map(e => e?.node)`
-- [ ] Error strategy chosen per call site: Strict / Tolerant / Permissive
-- [ ] 401 / 403 callbacks wired (`on401`, `on403`) where auth flows are user-initiated
-
-## Styling
-
-- [ ] One styling system per component (no SLDS + Tailwind inside the same JSX)
-- [ ] SLDS-styled components either use the official blueprint classes or `@salesforce/design-system-react`, not both
-- [ ] Focus ring color uses Salesforce blue `#0176d3` if you want native-feeling focus
-- [ ] Dark mode handled via `.dark` token overrides in `global.css` (when using Tailwind/shadcn)
-
-## Build & Deploy
-
-- [ ] `npm run lint` passes
-- [ ] `npm run build` passes (this is the artifact that ships)
-- [ ] `dist/` size is sane and < 2,500 files (UIBundle ceiling)
-- [ ] Build script does not emit TypeScript side artifacts at the bundle root (`*.tsbuildinfo`, `vite.config.js`, `vite.config.d.ts`)
-- [ ] Deploy via `sf project deploy start --source-dir force-app/main/default/uiBundles/<appName> --source-dir force-app/main/default/applications` for internal apps (or MCP equivalent)
-- [ ] Smoke-test: open the app in App Launcher (internal) or Digital Experiences (external)
-- [ ] Smoke-test: hard-refresh on a deep route — should not 404
-
-## Anti-Patterns (block before they ship)
-
-- [ ] **No** Lightning base components (`lightning-card`, `lightning-button`) — not supported in React UI bundles
-- [ ] **No** `@wire` decorators
-- [ ] **No** `@salesforce/*` imports other than `@salesforce/platform-sdk/data`, ACC, or `@salesforce/ui-bundle`
-- [ ] **No** raw `fetch()` to `/services/data/...`
-- [ ] **No** debug code (`console.log` of SDK objects, response dumps) in committed recipes
+- Confirm an eligible edition on Hyperforce and the intended authorized org.
+- For internal apps, confirm Salesforce app domain and Edge Network.
+- Check generated Node requirements, CLI/plugin help, and the bundle lockfile.
+- Locate the actual DX package directory; `force-app/main/default` is a template
+  convention, while recipes have separate React/Angular package directories.
+- Confirm `ui-bundle.json`, bundle XML, integer `version`, and built `outputDir`.
+  Optional runtime `apiVersion` uses `vXX.X`; DX `sourceApiVersion` uses `XX.X`.
+  Internal metadata/packaging baseline is API 67.0+; i18n runtime needs 68.0+.
+- Internal: `target: CustomApplication`, qualified CustomApplication `uiBundle`
+  reference, app visibility and API Enabled grants, and permission-set assignment.
+- External: `target: Experience`, all four companion site metadata types, Digital
+  Experiences, appropriate licenses, and `appContainer`/qualified `appSpace`.
+- SPA: `index.html` fallback and a router basename matching the runtime mount.
+- Data: Data SDK query/mutate split, guarded capabilities, schema-validated fields,
+  explicit errors/empty states, relevant query refresh after writes.
+- Security: object/FLS/sharing grants as the actual user; custom Apex independently
+  enforces access. Avoid broad guest access to solve a frontend symptom.
+- ACC only: Employee Agent, Agentforce enabled, cookie policy, Lightning Out origin
+  trust, `embedAgentforceClient`, and cleanup.
+- Embedding only: standalone app first, full launch URL, current host component,
+  UIEmbedding/CSP configuration and feature status in [microfrontends.md](microfrontends.md).
+- Packaging only: internal app, source API 67+, package dependencies, and managed
+  review sourcemaps/analyzer requirements in [packaging.md](packaging.md).
+- Run existing build/lint and task-relevant checks; count files (limit 2,500).
+- Deploy bundle with companion metadata within the authorized scope. Do not
+  impose one bundle per transaction as a universal platform restriction.
+- Launch as the intended user and verify data, writes, and hard-refresh routes.
+  Report local-only verification separately from deployed-org verification.

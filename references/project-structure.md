@@ -1,15 +1,17 @@
 # Project Structure
 
+Reviewed 2026-10-08 against [Project Structure and Metadata](https://developer.salesforce.com/docs/platform/multiframework/guide/mfw-project-structure.html). The detailed tree below is a React example; Angular uses `angular.json`, `esbuild/`, and `middleware/` (see [angular.md](angular.md)).
+
 A Multi-Framework app is a **self-contained unit** under `force-app/main/default/uiBundles/<appName>/` containing both metadata and source. Application metadata and content live together — there is no separation between "Salesforce metadata" and "frontend source" the way there is for LWC.
 
 ## Canonical layout
 
 ```
 multiframework-recipes/
-  sfdx-project.json                 # Salesforce DX config (apiVersion v67.0+)
+  sfdx-project.json                 # Salesforce DX config (sourceApiVersion "67.0" or later)
   package.json                      # ROOT — SFDX metadata scripts only, NOT the React app
   data/                             # sf data import tree plans
-  config/project-scratch-def.json   # MUST set "language": "en_US"
+  config/project-scratch-def.json   # Generated scratch definition; verify org eligibility
   force-app/main/default/
     applications/
       MyApp.app-meta.xml            # CustomApplication that routes App Launcher to the bundle
@@ -60,7 +62,7 @@ multiframework-recipes/
     <isActive>true</isActive>
     <masterLabel>My App</masterLabel>
     <target>CustomApplication</target>
-    <version>1.0.0</version>
+    <version>1</version>
 </UIBundle>
 ```
 
@@ -69,7 +71,7 @@ multiframework-recipes/
 | `isActive` | Set `true` to make the app available |
 | `masterLabel` | User-facing label |
 | `target` | `CustomApplication` (internal App Launcher app) or `Experience` |
-| `version` | App version string |
+| `version` | Positive integer schema version, normally `1`; not a semantic app version |
 
 > `AppLauncher` was the Beta-era target name. Metadata API v67.0 rejects it; use `CustomApplication` for internal apps.
 
@@ -80,7 +82,7 @@ uiBundles/myApp/myApp.uibundle-meta.xml
   <target>CustomApplication</target>
 
 applications/MyApp.app-meta.xml
-  <uiBundle>myApp</uiBundle>
+  <uiBundle>c__myApp</uiBundle>
 ```
 
 ### `applications/<AppName>.app-meta.xml` for internal apps
@@ -90,7 +92,7 @@ applications/MyApp.app-meta.xml
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>My App</label>
     <uiType>Lightning</uiType>
-    <uiBundle>myApp</uiBundle>
+    <uiBundle>c__myApp</uiBundle>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
@@ -101,11 +103,11 @@ applications/MyApp.app-meta.xml
 
 | Element | Notes |
 |---|---|
-| `uiBundle` | Must match the UIBundle developer name / folder name |
+| `uiBundle` | Fully qualified bundle name: `c__myApp` or `<namespace>__myApp` |
 | `formFactors` | Use `Large` for desktop Lightning Experience |
 | `uiType` | Use `Lightning` |
 
-Deploying only the `UIBundle` can create runtime HTTP 400 errors because no route is registered for the app. Deploy the bundle and its `CustomApplication` together. External apps must use `<target>Experience</target>` and ship matching `digitalExperiences/`, `networks/`, and `sites/` metadata. See [templates.md](templates.md).
+Deploying only the `UIBundle` can create runtime HTTP 400 errors because no route is registered for the app. Deploy the bundle and its `CustomApplication` together. External apps must use `<target>Experience</target>` and ship matching `digitalExperienceConfigs/`, `digitalExperiences/`, `networks/`, and `sites/` metadata. See [templates.md](templates.md).
 
 ### `ui-bundle.json`
 
@@ -133,6 +135,7 @@ Runtime configuration consumed by the platform when serving the app.
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `outputDir` | string | yes | Path relative to bundle root containing build artifacts. Vite default is `dist`. |
+| `apiVersion` | string | no | Runtime version in `vXX.X` format; defaults to target org current version. Distinct from DX `sourceApiVersion`. |
 | `routing.fileBasedRouting` | boolean | no | When `true`, URLs map to folder structure inside `outputDir`. Default `true`. |
 | `routing.trailingSlash` | enum | no | `never` removes (`/page/` → `/page`); `always` adds; `auto` no change. |
 | `routing.fallback` | string | **yes for SPAs** | File served when nothing matches. Set `index.html` for client-side routing. |
@@ -175,7 +178,7 @@ The bundle's `package.json` declares React app dependencies and scripts. Typical
 
 Prefer `tsc --noEmit && vite build` unless you intentionally configure TypeScript project references. `tsc -b` can emit `*.tsbuildinfo`, `vite.config.js`, and `vite.config.d.ts` at the bundle root, and those files are treated as deployable `UIBundle` members unless ignored or removed.
 
-Recommended Vite plugins for any non-template-scaffolded project:
+For a non-template React project, verify current package exports and peers:
 
 - `@salesforce/vite-plugin-ui-bundle` — wires Vite dev server to the org for live data
 - `@salesforce/ui-bundle` — helper functions (auth, base path) for working with the Data SDK
@@ -195,12 +198,12 @@ Salesforce's Vite plugin can lag the latest Vite major. If `npm install` fails w
 
 ## File-count budget
 
-A `UIBundle` can hold up to **2,500 files**. Source maps in `dist/` and large public asset folders are the usual culprits when you hit the ceiling. Configure Vite to emit fewer source maps in production if needed:
+A `UIBundle` can hold up to **2,500 files**. Audit the actual payload and remove unused assets/caches. For ordinary non-review builds, sourcemaps may be disabled; managed AppExchange review requires them. See [packaging.md](packaging.md).
 
 ```ts
 // vite.config.ts
 build: {
-  sourcemap: false   // or 'hidden' to keep them but not reference in output
+  sourcemap: true    // required for managed AppExchange review; count .map files too
 }
 ```
 
@@ -237,4 +240,4 @@ resolve: {
 
 ## Why the bundle is self-contained
 
-The platform treats `uiBundles/<appName>/` as one atomic unit. Deploys ship the metadata + the contents of `outputDir` together. Sharing source between bundles is **not** supported — you can't import from a sibling bundle. Use npm packages for genuine code sharing.
+The platform treats `uiBundles/<appName>/` as one atomic unit. Deploys ship the metadata + the contents of `outputDir` together. For shared source, use a package/workspace that each build includes in its own output. Do not rely on runtime imports of undeployed sibling source; the current guide does not establish a blanket ban on build-time shared code.
